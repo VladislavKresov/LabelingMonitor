@@ -1,0 +1,80 @@
+﻿<Window x:Class="LabelingMonitor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:LabelingMonitor"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="750" Width="1196"
+        xmlns:prism="http://prismlibrary.com/"
+        prism:ViewModelLocator.AutoWireViewModel="True">
+    <Grid>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="25"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        
+        <Menu Height="25" Grid.Row="0">
+            <MenuItem Header="File">
+            
+            </MenuItem>
+        </Menu>
+        
+        <TabControl Grid.Row="1">
+            <TabItem Header="Edit">
+            </TabItem>
+            <TabItem Header="View">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="30"/>
+                        <RowDefinition/>
+                        <RowDefinition Height="30"/>
+                        <RowDefinition Height="30"/>
+                        <RowDefinition Height="40"/>
+                    </Grid.RowDefinitions>
+
+                    <Label Grid.Row="0" Content="{Binding PathToCurrentImage}"/>
+
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+
+                        <Image Grid.Row="0" Grid.Column="0" Margin="5" Source="{Binding MainImageSource}" />
+                        <Image Grid.Row="0" Grid.Column="1" Margin="5" Source="{Binding ChangedImage1Source}"/>
+                        <Image Grid.Row="1" Grid.Column="0" Margin="5" Source="{Binding ChangedImage2Source}"/>
+                    </Grid>
+
+                    <StackPanel Orientation="Horizontal" Grid.Row="2">
+                        <Label Content="Number of image:"/>
+                        <Label Content="{Binding NumberOfCurrentImage}"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Grid.Row="3">
+                        <Label Content="Go to image: "/>
+                        <TextBlock Text="N"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Grid.Row="4" HorizontalAlignment="Right">
+                        <Button Margin="5" Content="Previous" Width=" 50"/>
+                        <Button Margin="5" Content="Next" Width=" 50"/>
+                    </StackPanel>
+
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <StackPanel DockPanel.Dock="Bottom"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Height="50"                    >
+            
+        </StackPanel>
+    </Grid>
+</Window>

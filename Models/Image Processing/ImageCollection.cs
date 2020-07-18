@@ -33,7 +33,7 @@ namespace LabelingMonitor.Models
 
             //Forms list of images
             images.Add(sourceImage);
-            List<BitmapImage> croppedImages = ImageLabelCropper.Crop(pathToSource, pathToCsvMask, symbols);
+            List<BitmapImage> croppedImages = ImageLabelCropper.Crop(pathToSource, pathToCsvMask, symbols, ImageLabelCropper.CROP_ONLY_SYMBOL);
             foreach (BitmapImage croppedImage in croppedImages)
                 images.Add(croppedImage);
 

@@ -67,12 +67,13 @@ namespace LabelingMonitor.ViewModels
         }
 
         private void UpdateImageInfo()
-        {
+        {          
             var images = ImageCollection.GetCroppedImagesCollection(NumberOfCurrentImage - 1);
             MainImageSource = images[0];
             ChangedImage1Source = images[1];
             ChangedImage2Source = images[2];
             PathToCurrentImage = UserData.GetPathToImage(NumberOfCurrentImage - 1);
+            GC.Collect();
         }
 
         //sets the user data

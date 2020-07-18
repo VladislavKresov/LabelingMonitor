@@ -12,8 +12,8 @@ namespace LabelingMonitor.Models.CSV_Processing
 {
     class ImageLabelCropper
     {
-        public static int CROP_ALL_EXCEPT_SYMBOL = 0;
-        public static int CROP_ONLY_SYMBOL = 1;
+        public static int CROP_ONLY_SYMBOL = 0;
+        public static int CROP_ALL_EXCEPT_SYMBOL = 1;
 
         /// <summary>
         /// Returns two images cropped from original
@@ -27,11 +27,25 @@ namespace LabelingMonitor.Models.CSV_Processing
             List<BitmapImage> newImages = new List<BitmapImage>();
             Bitmap sourceImage = new Bitmap(pathToImage);            
             int width = sourceImage.Width;
-            int height = sourceImage.Height;
-            Bitmap newImage1 = new Bitmap(pathToImage);
-            Bitmap newImage2 = new Bitmap(pathToImage);
+            int height = sourceImage.Height;                       
             Color backgroundColor = UserData.BackgroundColor;
 
+            Bitmap newImage1;
+            Bitmap newImage2;
+            if(CROPPING_MODE == CROP_ALL_EXCEPT_SYMBOL)
+            {
+                newImage1 = new Bitmap(width, height);
+                newImage2 = new Bitmap(width, height);
+                using (var g = Graphics.FromImage(newImage1))
+                    g.Clear(backgroundColor);
+                using (var g = Graphics.FromImage(newImage2))
+                    g.Clear(backgroundColor);
+            }
+            else
+            {
+                newImage1 = new Bitmap(pathToImage);
+                newImage2 = new Bitmap(pathToImage);
+            }
 
             char[,] mask = ReadMaskFromCSV(pathToCsvMask, width, height);
 

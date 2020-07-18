@@ -16,7 +16,8 @@ namespace LabelingMonitor.ViewModels
 {
     class MainWindowVM : BindableBase
     {
-        public int CountOfImages;        
+        public int CountOfImages;
+        public int CroppingMode;
 
         // Binding the main image
         private BitmapImage _MainImageSource;
@@ -58,25 +59,21 @@ namespace LabelingMonitor.ViewModels
             set { SetProperty(ref _NumberOfCurrentImage, value); }
         }
 
+        // Binding the items of comboBox
+        private List<string> _ComboBoxItems;
+        public List<string> ComboBoxItems
+        {
+            get { return _ComboBoxItems; }
+            set { SetProperty(ref _ComboBoxItems, value); }
+        }
+
         public MainWindowVM()
         {
             InitializeUserData();
-            CountOfImages = UserData.PathesToImages.Count();
-            NumberOfCurrentImage = 1;
+            InitializeVariables();            
             UpdateImageInfo();
         }
 
-        private void UpdateImageInfo()
-        {          
-            var images = ImageCollection.GetCroppedImagesCollection(NumberOfCurrentImage - 1);
-            MainImageSource = images[0];
-            ChangedImage1Source = images[1];
-            ChangedImage2Source = images[2];
-            PathToCurrentImage = UserData.GetPathToImage(NumberOfCurrentImage - 1);
-            GC.Collect();
-        }
-
-        //sets the user data
         private void InitializeUserData()
         {            
             UserData.PathesToImages = new List<string>();
@@ -93,6 +90,23 @@ namespace LabelingMonitor.ViewModels
             UserData.ColorMarkers.Add('2');
         }
 
+        private void InitializeVariables()
+        {
+            CountOfImages = UserData.PathesToImages.Count();
+            NumberOfCurrentImage = 1;
+            CroppingMode = 0;
+        }
+
+        private void UpdateImageInfo()
+        {          
+            var images = ImageCollection.GetCroppedImagesCollection(NumberOfCurrentImage - 1, CroppingMode);
+            MainImageSource = images[0];
+            ChangedImage1Source = images[1];
+            ChangedImage2Source = images[2];
+            PathToCurrentImage = UserData.GetPathToImage(NumberOfCurrentImage - 1);
+            GC.Collect();
+        }
+
         public void OnButtonPreviousClick()
         {
             NumberOfCurrentImage = clamp(--NumberOfCurrentImage, 1, CountOfImages);
@@ -102,6 +116,18 @@ namespace LabelingMonitor.ViewModels
         public void OnButtonNextClick()
         {
             NumberOfCurrentImage = clamp(++NumberOfCurrentImage, 1, CountOfImages);
+            UpdateImageInfo();
+        }
+
+        public void GoTo(int number)
+        {
+            NumberOfCurrentImage = clamp(number, 1, CountOfImages);
+            UpdateImageInfo();
+        }
+
+        public void ChangeMode(int mode)
+        {
+            CroppingMode = clamp(mode, 0, 1);
             UpdateImageInfo();
         }
 

@@ -23,7 +23,7 @@ namespace LabelingMonitor.Models
         /// </summary>
         /// <param name="collectionIndex"> The index of path to image and .csv in UserData.cs </param>
         /// <returns>List of images</returns>
-        public static List<BitmapImage> GetCroppedImagesCollection(int collectionIndex) 
+        public static List<BitmapImage> GetCroppedImagesCollection(int collectionIndex, int CroppingMode) 
         {
             List<BitmapImage> images = new List<BitmapImage>();
             List<char> symbols = UserData.ColorMarkers;
@@ -33,7 +33,7 @@ namespace LabelingMonitor.Models
 
             //Forms list of images
             images.Add(sourceImage);
-            List<BitmapImage> croppedImages = ImageLabelCropper.Crop(pathToSource, pathToCsvMask, symbols, ImageLabelCropper.CROP_ONLY_SYMBOL);
+            List<BitmapImage> croppedImages = ImageLabelCropper.Crop(pathToSource, pathToCsvMask, symbols, CroppingMode);
             foreach (BitmapImage croppedImage in croppedImages)
                 images.Add(croppedImage);
 

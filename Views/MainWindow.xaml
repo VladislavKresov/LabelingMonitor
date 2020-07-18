@@ -9,19 +9,23 @@
         xmlns:prism="http://prismlibrary.com/"
         prism:ViewModelLocator.AutoWireViewModel="True">
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="597*"/>
+            <ColumnDefinition Width="592*"/>
+        </Grid.ColumnDefinitions>
 
         <Grid.RowDefinitions>
             <RowDefinition Height="25"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        
-        <Menu Height="25" Grid.Row="0">
+
+        <Menu Height="25" Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,-0.4,695.8" Grid.RowSpan="2">
             <MenuItem Header="File">
-            
+
             </MenuItem>
         </Menu>
-        
-        <TabControl Grid.Row="1">
+
+        <TabControl Grid.Row="1" Grid.ColumnSpan="2" Margin="0,0.2,-0.4,-0.2">
             <TabItem Header="Edit">
             </TabItem>
             <TabItem Header="View">
@@ -51,14 +55,30 @@
                         <Image Grid.Row="1" Grid.Column="0" Margin="5" Source="{Binding ChangedImage2Source}"/>
                     </Grid>
 
-                    <StackPanel Orientation="Horizontal" Grid.Row="2">
-                        <Label Content="Number of image:"/>
-                        <Label Content="{Binding NumberOfCurrentImage}"/>
-                    </StackPanel>
+                    <Grid Grid.Row="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <StackPanel Orientation="Horizontal" Grid.Column="0">
+                            <Label Content="Number of image:"/>
+                            <Label Content="{Binding NumberOfCurrentImage}"/>
+                        </StackPanel>
+
+                        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Grid.Column="1">
+                            <ComboBox Width="185" Margin="0,0,10,0" x:Name="CmbMode" SelectionChanged="CmbMode_SelectionChanged">
+                                <ComboBoxItem IsSelected="True">Crop only markers</ComboBoxItem>
+                                <ComboBoxItem>Crop all except markers</ComboBoxItem>
+                            </ComboBox>
+                        </StackPanel>
+                    </Grid>
+                    
 
                     <StackPanel Orientation="Horizontal" Grid.Row="3">
-                        <Label Content="Go to image: "/>
-                        <TextBlock Text="N"/>
+                        <Label Content="To image: "/>
+                        <TextBox Width="35" x:Name="GoTo_TxtBlock"/>
+                        <Button Content="Go" Width=" 50" Click="Button_Click" x:Name="GoTo_BTN"/>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Grid.Row="4" HorizontalAlignment="Right">
@@ -70,11 +90,9 @@
             </TabItem>
         </TabControl>
 
-        <StackPanel DockPanel.Dock="Bottom"
+        <StackPanel
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Height="50"                    >
-            
-        </StackPanel>
+                    Height="50" Grid.Column="1" Margin="0,0,-0.4,670.8" Grid.RowSpan="2"                    />
     </Grid>
 </Window>

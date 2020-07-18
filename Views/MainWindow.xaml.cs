@@ -26,8 +26,8 @@ namespace LabelingMonitor
 
         public MainWindow()
         {
-            InitializeComponent();
             ViewModel = new MainWindowVM();
+            InitializeComponent();            
             DataContext = ViewModel;
         }
 
@@ -38,6 +38,17 @@ namespace LabelingMonitor
             else
                 if (sender.Equals(Previous_BTN))
                 ViewModel.OnButtonPreviousClick();
+            if (sender.Equals(GoTo_BTN))
+            {
+                int number;
+                if (int.TryParse(GoTo_TxtBlock.Text, out number))
+                    ViewModel.GoTo(number);
+            }
+        }
+
+        private void CmbMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ViewModel.ChangeMode(CmbMode.SelectedIndex);
         }
     }
 }

@@ -21,11 +21,23 @@ namespace LabelingMonitor
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
-    {             
+    {
+        private MainWindowVM ViewModel;
+
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new MainWindowVM();
+            ViewModel = new MainWindowVM();
+            DataContext = ViewModel;
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender.Equals(Next_BTN))
+                ViewModel.OnButtonNextClick();
+            else
+                if (sender.Equals(Previous_BTN))
+                ViewModel.OnButtonPreviousClick();
         }
     }
 }

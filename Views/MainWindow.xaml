@@ -62,8 +62,8 @@
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Grid.Row="4" HorizontalAlignment="Right">
-                        <Button Margin="5" Content="Previous" Width=" 50"/>
-                        <Button Margin="5" Content="Next" Width=" 50"/>
+                        <Button Margin="5" Content="Previous" Width=" 50" Click="Button_Click" x:Name="Previous_BTN"/>
+                        <Button Margin="5" Content="Next" Width=" 50" Click="Button_Click" x:Name="Next_BTN"/>
                     </StackPanel>
 
                 </Grid>

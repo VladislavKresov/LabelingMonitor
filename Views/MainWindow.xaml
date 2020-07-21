@@ -21,13 +21,13 @@
 
         <Menu Height="25" Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,-0.4,695.8" Grid.RowSpan="2">
             <MenuItem Header="File">
-
+                <MenuItem Header="Open images (*.jpg | *.png)" Click="MenuItem_Click" x:Name="OpenImage_Item"/>
+                <MenuItem Header="Open markers" Click="MenuItem_Click" x:Name="OpenMarker_Item"/>
+                <MenuItem Header="Change marker type" Click="MenuItem_Click" x:Name="ChangeMarkerType_Item"/>
             </MenuItem>
         </Menu>
 
         <TabControl Grid.Row="1" Grid.ColumnSpan="2" Margin="0,0.2,-0.4,-0.2">
-            <TabItem Header="Edit">
-            </TabItem>
             <TabItem Header="View">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -82,12 +82,16 @@
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Grid.Row="4" HorizontalAlignment="Right">
-                        <Button Margin="5" Content="Previous" Width=" 50" Click="Button_Click" x:Name="Previous_BTN"/>
-                        <Button Margin="5" Content="Next" Width=" 50" Click="Button_Click" x:Name="Next_BTN"/>
+                        <Button x:Name="Previous_BTN" Margin="5" Content="Previous" Width=" 50" Click="Button_Click" IsEnabled="{Binding PrevBTN_Enabled}"/>
+                        <Button x:Name="Next_BTN" Margin="5" Content="Next" Width=" 50" Click="Button_Click" IsEnabled="{Binding NextBTN_Enabled}"/>
                     </StackPanel>
 
                 </Grid>
             </TabItem>
+            
+            <TabItem Header="Edit">
+            </TabItem>
+            
         </TabControl>
 
         <StackPanel

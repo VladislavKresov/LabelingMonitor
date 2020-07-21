@@ -1,4 +1,6 @@
-﻿using LabelingMonitor.ViewModels;
+﻿using LabelingMonitor.Models.Input_data;
+using LabelingMonitor.ViewModels;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -24,6 +26,8 @@ namespace LabelingMonitor
     {
         private MainWindowVM ViewModel;
 
+        public const int BUTTON_PREVIOUS = 0;
+        public const int BUTTON_NEXT = 1;
         public MainWindow()
         {
             ViewModel = new MainWindowVM();
@@ -34,10 +38,10 @@ namespace LabelingMonitor
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             if (sender.Equals(Next_BTN))
-                ViewModel.OnButtonNextClick();
+                ViewModel.MoveForward();
             else
                 if (sender.Equals(Previous_BTN))
-                ViewModel.OnButtonPreviousClick();
+                ViewModel.MoveBack();
             if (sender.Equals(GoTo_BTN))
             {
                 int number;
@@ -48,7 +52,44 @@ namespace LabelingMonitor
 
         private void CmbMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            ViewModel.ChangeMode(CmbMode.SelectedIndex);
+            ViewModel.ChangeCroppingType(CmbMode.SelectedIndex);
         }
+
+        private void MenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Multiselect = true;
+            if (sender.Equals(OpenImage_Item))
+            {
+                ofd.Filter = " Images (*.jpg)|*.jpg|(*.png)|*.png";
+                if(ofd.ShowDialog() == true)                
+                    UserData.PathesToImages = ofd.FileNames.ToList<string>();
+                
+            }
+            
+            if (sender.Equals(OpenMarker_Item))
+            {
+                if (UserData.MarkerType == UserData.MARKER_TYPE_MASK)
+                {
+                    ofd.Filter = " Markers (*.csv)|*.csv";
+                    if (ofd.ShowDialog() == true)
+                        UserData.PathesToCsvFiles = ofd.FileNames.ToList<string>();
+                }
+                else
+                {                    
+                    ofd.Filter = " Marker file (*.txt)|*.txt";
+                    if (ofd.ShowDialog() == true)
+                        UserData.PathesToTxtFiles = ofd.FileNames.ToList<string>();
+                }
+            }
+
+            if(sender.Equals(ChangeMarkerType_Item))
+            {
+                UserData.SwitchMarkerType();
+            }
+
+            ViewModel.UpdateImageInfo();
+        }
+
     }
 }

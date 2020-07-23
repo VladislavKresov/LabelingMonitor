@@ -1,5 +1,4 @@
-﻿using LabelingMonitor.Models.CSV_Processing;
-using LabelingMonitor.Models.Input_data;
+﻿using LabelingMonitor.Models.Input_data;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -25,7 +24,7 @@ namespace LabelingMonitor.Models
         {
             List<BitmapImage> images = new List<BitmapImage>();            
             List<char> symbols = UserData.SymbolMarkers;
-            string pathToSource = UserData.GetPathToImage(IndexOfImageInUserData);
+            string pathToSource = UserData.GetPathToImage(IndexOfImageInUserData, UserData.MARKER_TYPE_MASK);
             string pathToCsvMask = UserData.GetPathToCsvFile(IndexOfImageInUserData);
             
             List<BitmapImage> croppedImages = Crop(pathToSource, pathToCsvMask, symbols, CroppingMode);

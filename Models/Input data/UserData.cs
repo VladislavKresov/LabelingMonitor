@@ -1,5 +1,7 @@
-﻿using System;
+﻿using LabelingMonitor.ViewModels;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -31,12 +33,11 @@ namespace LabelingMonitor.Models.Input_data
             public List<Frame> frames;
         }
 
-        public const int MARKER_TYPE_FRAME = 0;
-        public const int MARKER_TYPE_MASK = 1;
-        public const int CROP_ONLY_SYMBOL = 0;
-        public const int CROP_ALL_EXCEPT_SYMBOL = 1;
+        public static readonly int MARKER_TYPE_FRAME = 0;
+        public static readonly int MARKER_TYPE_MASK = 1;
+        public static readonly int CROP_ONLY_SYMBOL = 0;
+        public static readonly int CROP_ALL_EXCEPT_SYMBOL = 1;
 
-        public static int MarkerType { get; set; }
         /////////// Masked images
         public static int CroppingType { get; set; }
         public static List<string> PathesToImages { get; set; }
@@ -52,9 +53,19 @@ namespace LabelingMonitor.Models.Input_data
 
         ///////////////////////// Service methods
         /// <summary>
+        /// Sets collection depending on marker type
+        /// </summary>
+        public static void SetFileCollection(List<string> list, int MarkerType)
+        {
+            if (MarkerType == MARKER_TYPE_FRAME)
+                PathesToTxtFiles = list;
+            else
+                PathesToCsvFiles = list;
+        }
+        /// <summary>
         /// Returns the path to image depending on the marker type from MaskedImages collection
         /// </summary>       
-        public static string GetPathToImage(int index)
+        public static string GetPathToImage(int index, int MarkerType)
         {
             if(MarkerType == MARKER_TYPE_FRAME)
                 return FramedImages[index].source;
@@ -71,26 +82,15 @@ namespace LabelingMonitor.Models.Input_data
         }                        
 
         /// <summary>
-        //Returns the count of parced images depending on the marker type        
+        /// Returns the count of parced images depending on the marker type        
         /// </summary>        
-        public static int GetCountOfParcedImages()
+        public static int GetCountOfParcedImages(int MarkerType)
         {
             if (MarkerType == MARKER_TYPE_FRAME)
                 return FramedImages.Count;
             else
                 return MaskedImages.Count;
-        }
-
-        /// <summary>
-        /// Changes type between two states
-        /// </summary>
-        public static void SwitchMarkerType()
-        {
-            if (MarkerType == MARKER_TYPE_FRAME)
-                MarkerType = MARKER_TYPE_MASK;
-            else
-                MarkerType = MARKER_TYPE_FRAME;
-        }
+        }        
 
         /// <summary>
         /// Changes type between two states
@@ -106,7 +106,7 @@ namespace LabelingMonitor.Models.Input_data
         /// <summary>
         // Parcing the Images collection depending on the marker type        
         /// </summary>        
-        public static bool TryToParceImages()
+        public static bool TryToParceImages(int MarkerType)
         {
             if (MarkerType == MARKER_TYPE_FRAME)
                 return TryToParceFramedImages();
@@ -117,6 +117,9 @@ namespace LabelingMonitor.Models.Input_data
         /// <summary>
         // Parcing images data from files to FramesImages list        
         /// </summary>        
+        
+
+        
         private static bool TryToParceFramedImages()
         {
             if (PathesToTxtFiles.Count == 0)
@@ -157,39 +160,37 @@ namespace LabelingMonitor.Models.Input_data
             {
                 return false;
             }
-        }        
+        }
 
         /// <summary>
-        // Matches images and .csv masks by compairing the names        
+        /// Matches images and .csv masks by compairing the names        
         /// </summary>        
         private static bool TryToParceMaskedImages()
         {
-            if(PathesToImages.Count() == PathesToCsvFiles.Count())
+            List<MaskedImage> parcedImages = new List<MaskedImage>();
+            int imageCount = PathesToImages.Count();
+            int maskCount = PathesToCsvFiles.Count();
+            for (int imgIndx = 0; imgIndx < imageCount; imgIndx++)
             {
-                List<MaskedImage> parcedImages = new List<MaskedImage>();
-                int imageCount = PathesToImages.Count();
-                for (int imgIndx = 0; imgIndx < imageCount; imgIndx++)
+                string imageName = Path.GetFileNameWithoutExtension(PathesToImages[imgIndx]);
+                for (int maskIndx = 0; maskIndx < maskCount; maskIndx++)
                 {
-                    string imageName = Path.GetFileNameWithoutExtension(PathesToImages[imgIndx]);
-                    for (int maskIndx = 0; maskIndx < imageCount-1; maskIndx++)
+                    string maskName = Path.GetFileNameWithoutExtension(PathesToCsvFiles[maskIndx]);
+                    if(imageName == maskName)
                     {
-                        string maskName = Path.GetFileNameWithoutExtension(PathesToCsvFiles[imgIndx]);
-                        if(imageName == maskName)
-                        {
-                            MaskedImage image = new MaskedImage();
-                            image.source = PathesToImages[imgIndx];
-                            image.csvMask = PathesToCsvFiles[imgIndx];
-                            parcedImages.Add(image);
-                            break;
-                        }
+                        MaskedImage image = new MaskedImage();
+                        image.source = PathesToImages[imgIndx];
+                        image.csvMask = PathesToCsvFiles[maskIndx];
+                        parcedImages.Add(image);
+                        break;
                     }
                 }
-                if (parcedImages.Count > 0)
-                {
-                    MaskedImages = parcedImages;
-                    return true;
-                }                                                 
             }
+            if (parcedImages.Count > 0)
+            {
+                MaskedImages = parcedImages;
+                return true;
+            }                                                             
             return false;
         }
     }

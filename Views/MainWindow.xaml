@@ -3,100 +3,33 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:LabelingMonitor"
+        xmlns:views="clr-namespace:LabelingMonitor.Views"
         mc:Ignorable="d"
         Title="MainWindow" Height="750" Width="1196"
         xmlns:prism="http://prismlibrary.com/"
         prism:ViewModelLocator.AutoWireViewModel="True">
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="597*"/>
-            <ColumnDefinition Width="592*"/>
-        </Grid.ColumnDefinitions>
-
         <Grid.RowDefinitions>
             <RowDefinition Height="25"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
 
-        <Menu Height="25" Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,-0.4,695.8" Grid.RowSpan="2">
-            <MenuItem Header="File">
-                <MenuItem Header="Open images (*.jpg | *.png)" Click="MenuItem_Click" x:Name="OpenImage_Item"/>
-                <MenuItem Header="Open markers" Click="MenuItem_Click" x:Name="OpenMarker_Item"/>
-                <MenuItem Header="Change marker type" Click="MenuItem_Click" x:Name="ChangeMarkerType_Item"/>
+        <Menu Height="25" Grid.Row="0">
+            <MenuItem Header="File" Height="25" Width="62">
+                <MenuItem Header="Open images (*.jpg | *.png)" Click="MenuItem_Click" x:Name="OpenImage_Item" IsEnabled="{Binding OpenImagesEnabled}"/>
+                <MenuItem Header="Open marker files" Click="MenuItem_Click" x:Name="OpenMarker_Item"/>
+                <MenuItem Header="Switch marker type" Click="MenuItem_Click" x:Name="ChangeMarkerType_Item"/>
             </MenuItem>
         </Menu>
 
-        <TabControl Grid.Row="1" Grid.ColumnSpan="2" Margin="0,0.2,-0.4,-0.2">
+        <TabControl Grid.Row="1">
             <TabItem Header="View">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="30"/>
-                        <RowDefinition/>
-                        <RowDefinition Height="30"/>
-                        <RowDefinition Height="30"/>
-                        <RowDefinition Height="40"/>
-                    </Grid.RowDefinitions>
-
-                    <Label Grid.Row="0" Content="{Binding PathToCurrentImage}"/>
-
-                    <Grid Grid.Row="1">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition/>
-                            <ColumnDefinition/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                        </Grid.RowDefinitions>
-
-                        <Image Grid.Row="0" Grid.Column="0" Margin="5" Source="{Binding MainImageSource}" />
-                        <Image Grid.Row="0" Grid.Column="1" Margin="5" Source="{Binding ChangedImage1Source}"/>
-                        <Image Grid.Row="1" Grid.Column="0" Margin="5" Source="{Binding ChangedImage2Source}"/>
-                    </Grid>
-
-                    <Grid Grid.Row="2">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition/>
-                            <ColumnDefinition/>
-                        </Grid.ColumnDefinitions>
-                        
-                        <StackPanel Orientation="Horizontal" Grid.Column="0">
-                            <Label Content="Number of image:"/>
-                            <Label Content="{Binding NumberOfCurrentImage}"/>
-                        </StackPanel>
-
-                        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Grid.Column="1">
-                            <ComboBox Width="185" Margin="0,0,10,0" x:Name="CmbMode" SelectionChanged="CmbMode_SelectionChanged">
-                                <ComboBoxItem IsSelected="True">Crop only markers</ComboBoxItem>
-                                <ComboBoxItem>Crop all except markers</ComboBoxItem>
-                            </ComboBox>
-                        </StackPanel>
-                    </Grid>
-                    
-
-                    <StackPanel Orientation="Horizontal" Grid.Row="3">
-                        <Label Content="To image: "/>
-                        <TextBox Width="35" x:Name="GoTo_TxtBlock"/>
-                        <Button Content="Go" Width=" 50" Click="Button_Click" x:Name="GoTo_BTN"/>
-                    </StackPanel>
-
-                    <StackPanel Orientation="Horizontal" Grid.Row="4" HorizontalAlignment="Right">
-                        <Button x:Name="Previous_BTN" Margin="5" Content="Previous" Width=" 50" Click="Button_Click" IsEnabled="{Binding PrevBTN_Enabled}"/>
-                        <Button x:Name="Next_BTN" Margin="5" Content="Next" Width=" 50" Click="Button_Click" IsEnabled="{Binding NextBTN_Enabled}"/>
-                    </StackPanel>
-
-                </Grid>
+                <Frame Source="ViewPage.xaml" />
             </TabItem>
-            
+
             <TabItem Header="Edit">
             </TabItem>
-            
-        </TabControl>
 
-        <StackPanel
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Right"
-                    Height="50" Grid.Column="1" Margin="0,0,-0.4,670.8" Grid.RowSpan="2"                    />
+        </TabControl>
     </Grid>
 </Window>

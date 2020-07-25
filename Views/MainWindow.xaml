@@ -28,6 +28,7 @@
             </TabItem>
 
             <TabItem Header="Edit">
+                <Frame Source="EditPage.xaml"/>
             </TabItem>
 
         </TabControl>

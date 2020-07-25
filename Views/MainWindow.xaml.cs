@@ -46,7 +46,7 @@ namespace LabelingMonitor
             
             if (sender.Equals(OpenMarker_Item))
             {
-                if (ViewModel.MarkerType == ViewModel.MARKER_TYPE_MASK)               
+                if (ViewModel.MarkerType == UserData.MARKER_TYPE_MASK)               
                     ofd.Filter = " Markers (*.csv)|*.csv";
                 else                
                     ofd.Filter = " Marker file (*.txt)|*.txt";

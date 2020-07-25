@@ -11,8 +11,9 @@ namespace LabelingMonitor.ViewModels
 {
     class MainWindowVM : BindableBase
     {
-        public readonly int MARKER_TYPE_FRAME = 0;
-        public readonly int MARKER_TYPE_MASK = 1;
+        public int MarkerType;
+        private ViewPageVM viewPageVM;
+        private EditPageVM editPageVM;
 
         // Binding the enable statement for "open images" menuItem
         private bool _OpenImagesEnabled;
@@ -20,27 +21,13 @@ namespace LabelingMonitor.ViewModels
         {
             get { return _OpenImagesEnabled; }
             set { SetProperty(ref _OpenImagesEnabled, value); }
-        }        
-        // Binding the marker type
-        private int _MarkerType;
-        public int MarkerType
-        {
-            get { return _MarkerType; }
-            set { SetProperty(ref _MarkerType, value); }            
-        }
-        // Binding update state
-        private bool _NeedUpdate;
-        public bool NeedUpdate
-        {
-            get { return _NeedUpdate; }
-            set { SetProperty(ref _NeedUpdate, value); }
-        }
+        }                
 
         private static MainWindowVM instance;
         private MainWindowVM()
         {
-            InitializeBindingVariables();            
             InitializeUserData();
+            InitializeVariables();            
         }
 
         public static MainWindowVM GetInstance()
@@ -50,8 +37,7 @@ namespace LabelingMonitor.ViewModels
                 instance = new MainWindowVM();
                 return instance;
             }
-            else
-                return instance;
+            return instance;
         }
 
         private void InitializeUserData()
@@ -66,12 +52,17 @@ namespace LabelingMonitor.ViewModels
             UserData.FrameColor = Color.Blue;
             UserData.SymbolMarkers.Add('1');
             UserData.SymbolMarkers.Add('2');
-            UserData.CroppingType = UserData.CROP_ONLY_SYMBOL;          
+            UserData.CroppingType = UserData.CROP_ONLY_SYMBOL;
         }
 
-        private void InitializeBindingVariables()
+        private void InitializeVariables()
         {           
             OpenImagesEnabled = true;
+            viewPageVM = ViewPageVM.GetInstance();
+            editPageVM = EditPageVM.GetInstance();
+            MarkerType = UserData.MARKER_TYPE_MASK;
+            viewPageVM.MarkerType = MarkerType;
+            editPageVM.MarkerType = MarkerType;            
         }   
 
         ///////////////// service methods //////////////////////      
@@ -83,9 +74,9 @@ namespace LabelingMonitor.ViewModels
             UserData.PathesToImages = list;
             // Trying to parce data if it isn't
             UserData.TryToParceImages(MarkerType);
-            // Notifying for updating
-            NeedUpdate = true;
-        }
+            // Updating pages
+            UpdatePages();
+        }        
 
         /// <summary>
         /// Sets collection to UserData and validating views
@@ -95,8 +86,8 @@ namespace LabelingMonitor.ViewModels
             UserData.SetFileCollection(list, MarkerType);
             // Trying to parce data if it isn't
             UserData.TryToParceImages(MarkerType);
-            // Notifying for updating
-            NeedUpdate = true;
+            // Updating pages
+            UpdatePages();
         }
 
         /// <summary>
@@ -104,19 +95,22 @@ namespace LabelingMonitor.ViewModels
         /// </summary>
         public void SwitchMarkerType()
         {
-            if (MarkerType == MARKER_TYPE_FRAME)
-                MarkerType = MARKER_TYPE_MASK;
+            if (MarkerType == UserData.MARKER_TYPE_FRAME)
+                MarkerType = UserData.MARKER_TYPE_MASK;
             else
-                MarkerType = MARKER_TYPE_FRAME;
+                MarkerType = UserData.MARKER_TYPE_FRAME;
 
             ValidateViewsEnablity();
-            // Notifying for updating
-            NeedUpdate = true;
+            // Notifying for updating marker type
+            editPageVM.MarkerType = MarkerType;
+            viewPageVM.MarkerType = MarkerType;
         }
-
+        /// <summary>
+        /// Enable or Disable views depending on marker type
+        /// </summary>
         private void ValidateViewsEnablity()
         {
-            if (MarkerType == MARKER_TYPE_FRAME)
+            if (MarkerType == UserData.MARKER_TYPE_FRAME)
             {
                 OpenImagesEnabled = false;
             }
@@ -124,6 +118,14 @@ namespace LabelingMonitor.ViewModels
             {
                 OpenImagesEnabled = true;
             }
+        }
+        /// <summary>
+        /// Notifying the pages to update images
+        /// </summary>
+        private void UpdatePages()
+        {
+            viewPageVM.Updated = false;
+            editPageVM.Updated = false;
         }
 
     }

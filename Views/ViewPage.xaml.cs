@@ -26,7 +26,7 @@ namespace LabelingMonitor.Views
 
         public ViewPage()
         {
-            ViewModel = new ViewPageVM();
+            ViewModel = ViewPageVM.GetInstance();
             InitializeComponent();
             DataContext = ViewModel;
         }

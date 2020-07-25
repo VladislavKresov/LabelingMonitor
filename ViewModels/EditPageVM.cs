@@ -1,16 +1,18 @@
-﻿using LabelingMonitor.Models;
-using LabelingMonitor.Models.Input_data;
+﻿using LabelingMonitor.Models.Input_data;
 using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
 
 namespace LabelingMonitor.ViewModels
 {
-    class ViewPageVM : BindableBase
-    {
+    class EditPageVM : BindableBase
+    {             
         // Binding the main image
         private BitmapImage _MainImageSource;
         public BitmapImage MainImageSource
@@ -18,19 +20,12 @@ namespace LabelingMonitor.ViewModels
             get { return _MainImageSource; }
             set { SetProperty(ref _MainImageSource, value); }
         }
-        // Binding the changed image 1
-        private BitmapImage _ChangedImage1Source;
-        public BitmapImage ChangedImage1Source
+        // Binding the edited image
+        private BitmapImage _EditedImageSource;
+        public BitmapImage EditedImageSource
         {
-            get { return _ChangedImage1Source; }
-            set { SetProperty(ref _ChangedImage1Source, value); }
-        }
-        // Binding the changed image 2
-        private BitmapImage _ChangedImage2Source;
-        public BitmapImage ChangedImage2Source
-        {
-            get { return _ChangedImage2Source; }
-            set { SetProperty(ref _ChangedImage2Source, value); }
+            get { return _EditedImageSource; }
+            set { SetProperty(ref _EditedImageSource, value); }
         }
         // Binding the path to current image
         private string _MarkerTypeText;
@@ -45,13 +40,6 @@ namespace LabelingMonitor.ViewModels
         {
             get { return _PathToCurrentImage; }
             set { SetProperty(ref _PathToCurrentImage, value); }
-        }
-        // Binding the number of current image
-        private int _NumberOfCurrentImage;
-        public int NumberOfCurrentImage
-        {
-            get { return _NumberOfCurrentImage; }
-            set { SetProperty(ref _NumberOfCurrentImage, value); }
         }
         // Binding the enable statement for "move back" button
         private bool _PrevBTN_Enabled;
@@ -110,94 +98,65 @@ namespace LabelingMonitor.ViewModels
             }
         }
 
-        private static ViewPageVM instance;
-        private ViewPageVM()
-        {
-            PropertyChanged += ViewPage_PropertyChanged;
-            InitializeVariables();
-        }
+        private static EditPageVM instance;
 
-        public static ViewPageVM GetInstance()
+        private EditPageVM()
         {
-            if(instance == null)
-            {
-                instance = new ViewPageVM();
-                return instance;
-            }
-            return instance;
+            InitializeVariables();
+            PropertyChanged += EditPage_PropertyChanged;
         }
 
         private void InitializeVariables()
         {           
-            NumberOfCurrentImage = 1;
             PrevBTN_Enabled = true;
             NextBTN_Enabled = true;
             CmbEnabled = false;
             CurrentFrameImage = 1;
             CurrentMaskImage = 1;
-            Updated = false;
+            Updated = true;
+        }
+        public static EditPageVM GetInstance()
+        {
+            if(instance == null)
+            {
+                instance = new EditPageVM();
+                return instance;
+            }
+            return instance;
         }
 
-        private void ViewPage_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void EditPage_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(MarkerType))
             {
                 // on marker type changing                
-                ResetViews();
                 UpdateImages();
             }
             if (e.PropertyName == nameof(Updated))
             {
                 // on data update
-                if(!Updated)
+                if (!Updated)
                 {
                     UpdateImages();
+                    Updated = true;
                 }
             }
         }
 
-        /// <summary>
-        /// Processes the images and updates the views
-        /// </summary>
         private void UpdateImages()
         {
             try
             {
-                Updated = true;
-                // Validating views
                 ValidateViewsEnablity();
-                // Validating the number of image in case changing of marker type
-                NumberOfCurrentImage = clamp(CurrentImageNumber, 1, UserData.GetCountOfParcedImages(MarkerType));
                 // updating data if have parced images
                 if (UserData.GetCountOfParcedImages(MarkerType) > 0)
                 {
                     // Getting source image
-                    string pathToSource = UserData.GetPathToImage(NumberOfCurrentImage - 1, MarkerType);
-                    BitmapImage sourceImage = new BitmapImage(new Uri(pathToSource));
+                    string pathToSource = UserData.GetPathToImage(CurrentImageNumber - 1, MarkerType);
+                    BitmapImage sourceImage = new BitmapImage(new Uri(pathToSource));                    
 
-                    // Setting images depending on marker type
-                    if (MarkerType == UserData.MARKER_TYPE_FRAME)
-                    {
-                        // Setting the <Image> views
-                        MainImageSource = sourceImage;
-                        // Here we getting image with drawn frames
-                        ChangedImage1Source = ImageCollection.GetFramed(NumberOfCurrentImage - 1);
-                        // Empty image
-                        ChangedImage2Source = null;
-                    }
-                    else
-                    {
-                        // Getting collection of masked images
-                        List<BitmapImage> maskedImages = new List<BitmapImage>();
-                        maskedImages.AddRange(ImageCollection.GetMasks(NumberOfCurrentImage - 1, UserData.CroppingType));
-                        // Setting the <Image> views
-                        MainImageSource = sourceImage;
-                        // Here is two source images croppes by two marker-symbols from .csv file 
-                        ChangedImage1Source = maskedImages[0];
-                        ChangedImage2Source = maskedImages[1];
-                    }
-                    // Setting the path to lable
                     PathToCurrentImage = pathToSource;
+                    MainImageSource = sourceImage;
 
                     // Disposing the memory
                     GC.Collect();
@@ -213,8 +172,6 @@ namespace LabelingMonitor.ViewModels
                 ResetViews();
             }
         }
-
-        ///////////////// service methods //////////////////////      
 
         /// <summary>
         /// Switches current image to previous
@@ -240,29 +197,12 @@ namespace LabelingMonitor.ViewModels
             }
         }
 
-        /// <summary>
-        /// Changes the current image to another by number
-        /// </summary>        
-        public void GoTo(int number)
+        private void ResetViews()
         {
-            if (CurrentImageNumber != number)
-            {
-                CurrentImageNumber = number;
-                Updated = false;
-            }
+            PathToCurrentImage = "";
+            MainImageSource = null;
+            EditedImageSource = null;
         }
-
-        /// <summary>
-        /// Changes type of cropping
-        /// </summary>        
-        public void ChangeCroppingType(int type)
-        {
-            if (type != UserData.CroppingType)
-            {
-                UserData.SwitchCroppingType();
-                Updated = false;
-            }
-        }        
 
         private void ValidateViewsEnablity()
         {
@@ -287,22 +227,6 @@ namespace LabelingMonitor.ViewModels
             else
                 NextBTN_Enabled = true;
         }
-
-        private void ResetViews()
-        {
-            PathToCurrentImage = "";
-            MainImageSource = null;
-            ChangedImage1Source = null;
-            ChangedImage2Source = null;
-        }
-
-        private int clamp(int value, int minVal, int maxVal)
-        {
-            if (value < minVal)
-                return minVal;
-            if (value > maxVal)
-                return maxVal;
-            return value;
-        }
     }
+
 }

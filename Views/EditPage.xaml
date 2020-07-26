@@ -40,11 +40,16 @@
         <Label Content="Effects:" Grid.Row="2" Grid.Column="0"/>
 
         <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="0">
-            <ComboBox Width="185" Height="30">
-                
+            <ComboBox Width="185" Height="30" x:Name="Effects_Cmb">
+                <ComboBoxItem IsSelected="True">No effects</ComboBoxItem>
+                <ComboBoxItem>Lightening</ComboBoxItem>
+                <ComboBoxItem>Shadowing</ComboBoxItem>
+                <ComboBoxItem>Crop</ComboBoxItem>
+                <ComboBoxItem>Rotate 90</ComboBoxItem>
+                <ComboBoxItem>Pixelize</ComboBoxItem>
             </ComboBox>
             <Button Content="Apply" Margin="5" Width="50" Height="30" x:Name="Apply_BTN" Click="onButtonClick"/>
-            <Button Content="Cancel" Margin="5" Width="50" Height="30" x:Name="Cancel_BTN" Click="onButtonClick"/>
+            <Button Content="Undo" Margin="5" Width="50" Height="30" x:Name="Undo_BTN" Click="onButtonClick" IsEnabled="{Binding UndoBTN_Enabled}"/>
         </StackPanel>
 
         <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Right">

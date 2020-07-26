@@ -1,11 +1,9 @@
-﻿using LabelingMonitor.Models.Input_data;
+﻿using LabelingMonitor.Models;
+using LabelingMonitor.Models.Input_data;
 using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
 
@@ -41,26 +39,33 @@ namespace LabelingMonitor.ViewModels
             get { return _PathToCurrentImage; }
             set { SetProperty(ref _PathToCurrentImage, value); }
         }
-        // Binding the enable statement for "move back" button
+        // Binding the enable state for "move back" button
         private bool _PrevBTN_Enabled;
         public bool PrevBTN_Enabled
         {
             get { return _PrevBTN_Enabled; }
             set { SetProperty(ref _PrevBTN_Enabled, value); }
         }
-        // Binding the enable statement for "move forward" button
+        // Binding the enable state for "move forward" button
         private bool _NextBTN_Enabled;
         public bool NextBTN_Enabled
         {
             get { return _NextBTN_Enabled; }
             set { SetProperty(ref _NextBTN_Enabled, value); }
         }
-        // Binding the enable statement for ComboBox
+        // Binding the enable state for ComboBox
         private bool _CmbEnabled;
         public bool CmbEnabled
         {
             get { return _CmbEnabled; }
             set { SetProperty(ref _CmbEnabled, value); }
+        }
+        // Binding the enable state for "Undo" button
+        private bool _UndoBTN_Enabled;
+        public bool UndoBTN_Enabled
+        {
+            get { return _UndoBTN_Enabled; }
+            set { SetProperty(ref _UndoBTN_Enabled, value); }
         }
         // Binding the marker Type state
         private int _MarkerType;
@@ -77,6 +82,12 @@ namespace LabelingMonitor.ViewModels
             set { SetProperty(ref _Updated, value); }
         }
 
+        public const int EFFECT_CLEAR = 0;
+        public const int EFFECT_LIGHTENING = 1;
+        public const int EFFECT_SHADOWING = 2;
+        public const int EFFECT_CROP = 3;
+        public const int EFFECT_ROTATE = 4;
+        public const int EFFECT_PIXELIZE = 5;
 
         private int CurrentFrameImage;
         private int CurrentMaskImage;
@@ -97,23 +108,23 @@ namespace LabelingMonitor.ViewModels
                     CurrentMaskImage = value;
             }
         }
+        private List<int> Effects;
 
         private static EditPageVM instance;
 
         private EditPageVM()
         {
             InitializeVariables();
+            ValidateViewsEnablity();
             PropertyChanged += EditPage_PropertyChanged;
         }
 
         private void InitializeVariables()
         {           
-            PrevBTN_Enabled = true;
-            NextBTN_Enabled = true;
-            CmbEnabled = false;
             CurrentFrameImage = 1;
             CurrentMaskImage = 1;
             Updated = true;
+            Effects = new List<int>();
         }
         public static EditPageVM GetInstance()
         {
@@ -123,6 +134,28 @@ namespace LabelingMonitor.ViewModels
                 return instance;
             }
             return instance;
+        }
+
+        public void AddEffect(int effect)
+        {
+            if (effect == EFFECT_CLEAR)
+                ClearEffects();
+            else
+                Effects.Add(effect);
+
+            Updated = false;
+        }
+
+        public void UndoLastEffect()
+        {
+            Effects.RemoveAt(Effects.Count - 1);
+            Updated = false;
+        }
+
+        public void ClearEffects()
+        {
+            Effects.Clear();
+            Updated = false;
         }
 
         private void EditPage_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -153,11 +186,14 @@ namespace LabelingMonitor.ViewModels
                 {
                     // Getting source image
                     string pathToSource = UserData.GetPathToImage(CurrentImageNumber - 1, MarkerType);
-                    BitmapImage sourceImage = new BitmapImage(new Uri(pathToSource));                    
+                    BitmapImage sourceImage = new BitmapImage(new Uri(pathToSource));
+
+                    BitmapImage processedImage = ImageCollection.GetProcessed(sourceImage, Effects);
 
                     PathToCurrentImage = pathToSource;
                     MainImageSource = sourceImage;
-
+                    EditedImageSource = processedImage;
+                    
                     // Disposing the memory
                     GC.Collect();
                 }
@@ -171,7 +207,7 @@ namespace LabelingMonitor.ViewModels
                 MessageBox.Show(messageBoxText, caption, button, icon);
                 ResetViews();
             }
-        }
+        }        
 
         /// <summary>
         /// Switches current image to previous
@@ -226,6 +262,11 @@ namespace LabelingMonitor.ViewModels
                 NextBTN_Enabled = false;
             else
                 NextBTN_Enabled = true;
+
+            if (Effects.Count == 0)
+                UndoBTN_Enabled = false;
+            else
+                UndoBTN_Enabled = true;
         }
     }
 

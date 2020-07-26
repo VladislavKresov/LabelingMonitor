@@ -104,7 +104,7 @@ namespace LabelingMonitor.Models.Input_data
         }   
 
         /// <summary>
-        // Parcing the Images collection depending on the marker type        
+        /// Parcing the Images collection depending on the marker type        
         /// </summary>        
         public static bool TryToParceImages(int MarkerType)
         {
@@ -115,10 +115,8 @@ namespace LabelingMonitor.Models.Input_data
         }
 
         /// <summary>
-        // Parcing images data from files to FramesImages list        
+        /// Parcing images data from files to FramesImages list        
         /// </summary>        
-        
-
         
         private static bool TryToParceFramedImages()
         {

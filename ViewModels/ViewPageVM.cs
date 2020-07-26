@@ -53,21 +53,21 @@ namespace LabelingMonitor.ViewModels
             get { return _NumberOfCurrentImage; }
             set { SetProperty(ref _NumberOfCurrentImage, value); }
         }
-        // Binding the enable statement for "move back" button
+        // Binding the enable state for "move back" button
         private bool _PrevBTN_Enabled;
         public bool PrevBTN_Enabled
         {
             get { return _PrevBTN_Enabled; }
             set { SetProperty(ref _PrevBTN_Enabled, value); }
         }
-        // Binding the enable statement for "move forward" button
+        // Binding the enable state for "move forward" button
         private bool _NextBTN_Enabled;
         public bool NextBTN_Enabled
         {
             get { return _NextBTN_Enabled; }
             set { SetProperty(ref _NextBTN_Enabled, value); }
         }
-        // Binding the enable statement for ComboBox
+        // Binding the enable state for ComboBox
         private bool _CmbEnabled;
         public bool CmbEnabled
         {

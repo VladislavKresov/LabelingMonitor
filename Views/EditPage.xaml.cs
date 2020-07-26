@@ -21,6 +21,7 @@ namespace LabelingMonitor.Views
     /// </summary>
     public partial class EditPage : Page
     {
+
         private EditPageVM ViewModel;
         public EditPage()
         {
@@ -41,11 +42,11 @@ namespace LabelingMonitor.Views
             }
             if (sender.Equals(Apply_BTN))
             {
-
+                ViewModel.AddEffect(Effects_Cmb.SelectedIndex);
             }
-            if (sender.Equals(Cancel_BTN))
+            if (sender.Equals(Undo_BTN))
             {
-
+                ViewModel.UndoLastEffect();
             }
             if (sender.Equals(CreateAll_BTN))
             {

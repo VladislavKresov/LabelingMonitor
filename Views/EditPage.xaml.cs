@@ -48,9 +48,9 @@ namespace LabelingMonitor.Views
             {
                 ViewModel.UndoLastEffect();
             }
-            if (sender.Equals(CreateAll_BTN))
+            if (sender.Equals(CreateImages_BTN))
             {
-
+                ViewModel.CreateImages();
             }
         }
     }    

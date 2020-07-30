@@ -88,5 +88,19 @@ namespace LabelingMonitor.Models
             return ImageProcess.ByteToBitmapImage(processedImage);
         }
 
+        /// <summary>
+        /// Creates the image to directory
+        /// </summary>
+        public static void Save(BitmapImage image, string filePath)
+        {
+            BitmapEncoder encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(image));
+
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                encoder.Save(fileStream);
+            }
+        }
+
     }
 }

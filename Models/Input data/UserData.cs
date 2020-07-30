@@ -48,20 +48,10 @@ namespace LabelingMonitor.Models.Input_data
         public static Color FrameColor { get; set; }
 
         /////////// Framed images
-        public static List<string> PathesToTxtFiles { get; set; }        
+        public static string PathToTxtFile { get; set; }        
         public static List<FramedImage> FramedImages { get; set; }
 
         ///////////////////////// Service methods
-        /// <summary>
-        /// Sets collection depending on marker type
-        /// </summary>
-        public static void SetFileCollection(List<string> list, int MarkerType)
-        {
-            if (MarkerType == MARKER_TYPE_FRAME)
-                PathesToTxtFiles = list;
-            else
-                PathesToCsvFiles = list;
-        }
         /// <summary>
         /// Returns the path to image depending on the marker type from MaskedImages collection
         /// </summary>       
@@ -120,37 +110,36 @@ namespace LabelingMonitor.Models.Input_data
         
         private static bool TryToParceFramedImages()
         {
-            if (PathesToTxtFiles.Count == 0)
+            if (PathToTxtFile == string.Empty)
                 return false;
 
             try
             {
                 List<FramedImage> parcedImages = new List<FramedImage>();
-                foreach (string fileName in PathesToTxtFiles)
+                
+                using (StreamReader sr = new StreamReader(PathToTxtFile))
                 {
-                    using (StreamReader sr = new StreamReader(fileName))
+                    string currentLine;
+                    while ((currentLine = sr.ReadLine()) != null)
                     {
-                        string currentLine;
-                        while ((currentLine = sr.ReadLine()) != null)
+                        string[] splitedLine = currentLine.Split(',');
+                        List<Frame> currentFrames = new List<Frame>();
+                        for (int indexOfStartFramePos = 1; indexOfStartFramePos <= splitedLine.Length-4; indexOfStartFramePos+=4)
                         {
-                            string[] splitedLine = currentLine.Split(',');
-                            List<Frame> currentFrames = new List<Frame>();
-                            for (int indexOfStartFramePos = 1; indexOfStartFramePos <= splitedLine.Length-4; indexOfStartFramePos+=4)
-                            {
-                                Frame frame = new Frame();
-                                frame.TopLeftX = int.Parse(splitedLine[indexOfStartFramePos]);
-                                frame.TopLeftY = int.Parse(splitedLine[indexOfStartFramePos+1]);
-                                frame.BottomRightX = int.Parse(splitedLine[indexOfStartFramePos+2]);
-                                frame.BottomRightY = int.Parse(splitedLine[indexOfStartFramePos+3]);
-                                currentFrames.Add(frame);
-                            }
-                            FramedImage currentImage = new FramedImage();
-                            currentImage.source = splitedLine[0];
-                            currentImage.frames = currentFrames;
-                            parcedImages.Add(currentImage);
+                            Frame frame = new Frame();
+                            frame.TopLeftX = int.Parse(splitedLine[indexOfStartFramePos]);
+                            frame.TopLeftY = int.Parse(splitedLine[indexOfStartFramePos+1]);
+                            frame.BottomRightX = int.Parse(splitedLine[indexOfStartFramePos+2]);
+                            frame.BottomRightY = int.Parse(splitedLine[indexOfStartFramePos+3]);
+                            currentFrames.Add(frame);
                         }
+                        FramedImage currentImage = new FramedImage();
+                        currentImage.source = splitedLine[0];
+                        currentImage.frames = currentFrames;
+                        parcedImages.Add(currentImage);
                     }
                 }
+                
                 FramedImages = parcedImages;
                 return true;
             }

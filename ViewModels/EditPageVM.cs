@@ -1,16 +1,21 @@
 ﻿using LabelingMonitor.Models;
+using LabelingMonitor.Models.File_Processing;
 using LabelingMonitor.Models.Input_data;
 using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
+using System.Text;
 using System.Windows;
+using System.Windows.Forms;
 using System.Windows.Media.Imaging;
+using static LabelingMonitor.Models.Input_data.UserData;
 
 namespace LabelingMonitor.ViewModels
 {
     class EditPageVM : BindableBase
-    {             
+    {
         // Binding the main image
         private BitmapImage _MainImageSource;
         public BitmapImage MainImageSource
@@ -67,6 +72,13 @@ namespace LabelingMonitor.ViewModels
             get { return _UndoBTN_Enabled; }
             set { SetProperty(ref _UndoBTN_Enabled, value); }
         }
+        // Binding the enable state for "Create images" button
+        private bool _CreateImagesBTN_Enabled;
+        public bool CreateImagesBTN_Enabled
+        {
+            get { return _CreateImagesBTN_Enabled; }
+            set { SetProperty(ref _CreateImagesBTN_Enabled, value); }
+        }
         // Binding the marker Type state
         private int _MarkerType;
         public int MarkerType
@@ -120,15 +132,16 @@ namespace LabelingMonitor.ViewModels
         }
 
         private void InitializeVariables()
-        {           
+        {
             CurrentFrameImage = 1;
             CurrentMaskImage = 1;
             Updated = true;
             Effects = new List<int>();
         }
+
         public static EditPageVM GetInstance()
         {
-            if(instance == null)
+            if (instance == null)
             {
                 instance = new EditPageVM();
                 return instance;
@@ -193,7 +206,7 @@ namespace LabelingMonitor.ViewModels
                     PathToCurrentImage = pathToSource;
                     MainImageSource = sourceImage;
                     EditedImageSource = processedImage;
-                    
+
                     // Disposing the memory
                     GC.Collect();
                 }
@@ -204,10 +217,10 @@ namespace LabelingMonitor.ViewModels
                 string caption = "Couldn't open image";
                 MessageBoxButton button = MessageBoxButton.OK;
                 MessageBoxImage icon = MessageBoxImage.Warning;
-                MessageBox.Show(messageBoxText, caption, button, icon);
+                System.Windows.MessageBox.Show(messageBoxText, caption, button, icon);
                 ResetViews();
             }
-        }        
+        }
 
         /// <summary>
         /// Switches current image to previous
@@ -267,7 +280,135 @@ namespace LabelingMonitor.ViewModels
                 UndoBTN_Enabled = false;
             else
                 UndoBTN_Enabled = true;
+
+            if (UserData.GetCountOfParcedImages(MarkerType) > 0)
+                CreateImagesBTN_Enabled = true;
+            else
+                CreateImagesBTN_Enabled = false;
+        }
+
+        public void CreateImages()
+        {
+            // Show the FolderBrowserDialog.
+            var folderBrowserDialog = new FolderBrowserDialog();           
+            DialogResult dialogResult = folderBrowserDialog.ShowDialog();
+            if (dialogResult == System.Windows.Forms.DialogResult.OK)
+            {
+                string folder = folderBrowserDialog.SelectedPath;
+                // If framed type
+                if (MarkerType == UserData.MARKER_TYPE_FRAME)
+                {
+                    // Asking for a new file
+                    string caption = "Create new marker file?";
+                    string messageBoxText = "Press 'Yes' if you want to create new marker file. Or 'No' if you want to add markers to current file.";
+                    MessageBoxButton button = MessageBoxButton.YesNoCancel;
+                    MessageBoxImage icon = MessageBoxImage.Question;
+                    MessageBoxResult messageBoxResult = System.Windows.MessageBox.Show(messageBoxText, caption, button, icon);
+                    // Setting file to write
+                    string pathToMarkerFile;                    
+                    if (messageBoxResult == MessageBoxResult.Yes)
+                    {
+                        pathToMarkerFile = CreateNewPath(folder, UserData.PathToTxtFile);
+                    }
+                    else
+                    {
+                        pathToMarkerFile = UserData.PathToTxtFile;
+                    }
+                    // Creating new processed images
+                    var processedImages = UserData.FramedImages;
+                    for (int i = 0; i < processedImages.Count; i++)
+                    {
+                        FramedImage newImage = new FramedImage();
+                        newImage.source = CreateProcessedImage(folder, processedImages[i].source);
+                        newImage.frames = processedImages[i].frames;
+                        processedImages[i] = newImage;
+                    }
+                    // Processing frames
+                    processedImages = FileProcess.GetProcessedFramedImages(processedImages, Effects);
+                    // Parcing to writeble format
+                    var parcedLines = FileProcess.ParceFramedImages(processedImages);
+                    // Writing processed images
+                    using (StreamWriter sw = new StreamWriter(pathToMarkerFile, true))
+                    {
+                        foreach (var line in parcedLines)
+                            sw.WriteLine(line);
+                    }
+                }
+                // If masked type
+                else
+                {
+                    // Creating new processed images               
+                    for (int i = 0; i < UserData.MaskedImages.Count; i++)
+                    {
+                        CreateProcessedImage(folder, UserData.MaskedImages[i].source);
+                        CreateProcessedMask(folder, UserData.MaskedImages[i]);                        
+                    }
+                }
+                GC.Collect();
+            }
+
+        }
+        /// <summary>
+        /// Creates the image and returned new path
+        /// </summary>        
+        private string CreateProcessedImage(string folder, string source)
+        {
+            // Creating new image path
+            string newImagePath = CreateNewPath(folder, source);
+            // Processing image
+            var processedImage = ImageCollection.GetProcessed(new BitmapImage(new Uri(source)), Effects);
+            // Saving the processed picture
+            ImageCollection.Save(processedImage, newImagePath);
+            return newImagePath;
+        }
+
+        private void CreateProcessedMask(string folder, MaskedImage maskedImage)
+        {
+            try
+            {
+                StringBuilder csvContent = new StringBuilder();
+                string newFilePath = CreateNewPath(folder,maskedImage.csvMask);
+                // Getting processed mask
+                char[,] processedMask = FileProcess.GetProcessedMask(maskedImage, Effects);
+                // Writing to new File                
+                int width = processedMask.GetLength(0);
+                int height = processedMask.GetLength(1);
+                for (int y = 0; y < height; y++)
+                {
+                    string line = "";
+                    for (int x = 0; x < width; x++)
+                    {
+                        line+=processedMask[x,y]+";";
+                    }
+                    csvContent.AppendLine(line);
+                }
+                
+                File.AppendAllText(newFilePath, csvContent.ToString());
+            }
+            catch (Exception e)
+            {
+                System.Windows.Forms.MessageBox.Show(e.Message,
+                                           "Error",
+                                           MessageBoxButtons.OK,
+                                           MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// Creates new unique path from source
+        /// </summary>
+        private string CreateNewPath(string folder, string source)
+        {
+            int count = 1;
+            string sourceExtension = Path.GetExtension(source);
+            string newImageName = count + sourceExtension;
+            string newImagePath = folder + @"\" + newImageName;
+            for (count = 1; File.Exists(newImagePath); count++)
+            {
+                newImageName = count + sourceExtension;
+                newImagePath = folder + @"\" + newImageName;
+            }
+            return newImagePath;
         }
     }
-
 }

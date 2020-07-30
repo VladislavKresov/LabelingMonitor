@@ -44,7 +44,7 @@ namespace LabelingMonitor.ViewModels
         {            
             UserData.PathesToImages = new List<string>();
             UserData.PathesToCsvFiles = new List<string>();
-            UserData.PathesToTxtFiles = new List<string>();
+            UserData.PathToTxtFile = "";
             UserData.FramedImages = new List<UserData.FramedImage>();
             UserData.MaskedImages = new List<UserData.MaskedImage>();
             UserData.SymbolMarkers = new List<char>();
@@ -81,9 +81,12 @@ namespace LabelingMonitor.ViewModels
         /// <summary>
         /// Sets collection to UserData and validating views
         /// </summary>
-        public void OpenNewFileCollection(List<string> list)
+        public void OpenNewFileCollection(List<string> files)
         {
-            UserData.SetFileCollection(list, MarkerType);
+            if (MarkerType == UserData.MARKER_TYPE_FRAME)
+                UserData.PathToTxtFile = files[0];
+            else
+                UserData.PathesToCsvFiles = files;
             // Trying to parce data if it isn't
             UserData.TryToParceImages(MarkerType);
             // Updating pages

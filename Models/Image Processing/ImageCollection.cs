@@ -76,7 +76,7 @@ namespace LabelingMonitor.Models
                         processedImage = ImageProcess.Crop(processedImage, 50, 50, (float) sourceImage.Width - 50, (float) sourceImage.Height - 50);
                         break;
                     case EditPageVM.EFFECT_ROTATE:
-                        processedImage = ImageProcess.Rotate(processedImage, 90f);
+                        processedImage = ImageProcess.Rotate(processedImage, -90f);
                         break;
                     case EditPageVM.EFFECT_PIXELIZE:
                         processedImage = ImageProcess.Quality(processedImage, 25);

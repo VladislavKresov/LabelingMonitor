@@ -108,6 +108,30 @@ namespace LabelingMonitor.ViewModels
             editPageVM.MarkerType = MarkerType;
             viewPageVM.MarkerType = MarkerType;
         }
+
+        /// <summary>
+        /// Clears loaded files
+        /// </summary>
+        public void Clear()
+        {
+            if(MarkerType == UserData.MARKER_TYPE_FRAME)
+            {
+                UserData.PathToTxtFile = "";
+                UserData.FramedImages.Clear();
+            }
+            else
+            {
+                UserData.MaskedImages.Clear();
+                UserData.PathesToCsvFiles.Clear();
+                UserData.PathesToImages.Clear();
+            }
+
+            editPageVM.ResetViews();
+            viewPageVM.ResetViews();
+            editPageVM.Updated = false;
+            viewPageVM.Updated = false;
+        }
+
         /// <summary>
         /// Enable or Disable views depending on marker type
         /// </summary>

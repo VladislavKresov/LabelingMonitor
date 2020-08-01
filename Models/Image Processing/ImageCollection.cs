@@ -74,8 +74,8 @@ namespace LabelingMonitor.Models
                         break;
                     case EditPageVM.EFFECT_CROP:
                         int indent = EditPageVM.IndentToCrop;                        
-                        int width = (int) sourceImage.Width - 2 * indent;
-                        int height = (int) sourceImage.Height - 2 * indent;
+                        int width = sourceImage.PixelWidth - 2 * indent;
+                        int height = sourceImage.PixelHeight - 2 * indent;
                         processedImage = ImageProcess.Crop(processedImage, indent, indent, width, height);
                         break;
                     case EditPageVM.EFFECT_ROTATE:

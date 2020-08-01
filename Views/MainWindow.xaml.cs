@@ -58,7 +58,12 @@ namespace LabelingMonitor
             if(sender.Equals(ChangeMarkerType_Item))
             {                
                 ViewModel.SwitchMarkerType();
-            }            
+            }      
+            
+            if(sender.Equals(Clear_Item))
+            {
+                ViewModel.Clear();
+            }
         }
 
     }

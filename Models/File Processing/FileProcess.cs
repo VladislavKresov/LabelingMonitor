@@ -76,8 +76,6 @@ namespace LabelingMonitor.Models.File_Processing
             foreach (var frame in frames)
             {
                 // Rotating each frame
-                int frameWidth = frame.BottomRightX - frame.TopLeftX;
-                int frameHeight = frame.BottomRightY - frame.TopLeftY;
                 Frame RotatedFrame = new Frame();
                 RotatedFrame.TopLeftX = frame.TopLeftY;
                 RotatedFrame.TopLeftY = width - frame.BottomRightX;
@@ -113,8 +111,8 @@ namespace LabelingMonitor.Models.File_Processing
             // Cropping mask
             if (effects.Contains(EditPageVM.EFFECT_CROP))
             {
-                int width = bm.PixelWidth - indent;
-                int height = bm.PixelHeight - indent;
+                int width = bm.PixelWidth - 2 * indent;
+                int height = bm.PixelHeight - 2 * indent;
                 mask = CropMask(width, height, indent, mask);
             }
             // Rotating mask

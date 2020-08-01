@@ -122,21 +122,24 @@ namespace LabelingMonitor.Models.Input_data
                     string currentLine;
                     while ((currentLine = sr.ReadLine()) != null)
                     {
-                        string[] splitedLine = currentLine.Split(',');
-                        List<Frame> currentFrames = new List<Frame>();
-                        for (int indexOfStartFramePos = 1; indexOfStartFramePos <= splitedLine.Length-4; indexOfStartFramePos+=4)
+                        if (currentLine != "")
                         {
-                            Frame frame = new Frame();
-                            frame.TopLeftX = int.Parse(splitedLine[indexOfStartFramePos]);
-                            frame.TopLeftY = int.Parse(splitedLine[indexOfStartFramePos+1]);
-                            frame.BottomRightX = int.Parse(splitedLine[indexOfStartFramePos+2]);
-                            frame.BottomRightY = int.Parse(splitedLine[indexOfStartFramePos+3]);
-                            currentFrames.Add(frame);
+                            string[] splitedLine = currentLine.Split(',');
+                            List<Frame> currentFrames = new List<Frame>();
+                            for (int indexOfStartFramePos = 1; indexOfStartFramePos <= splitedLine.Length - 4; indexOfStartFramePos += 4)
+                            {
+                                Frame frame = new Frame();
+                                frame.TopLeftX = int.Parse(splitedLine[indexOfStartFramePos]);
+                                frame.TopLeftY = int.Parse(splitedLine[indexOfStartFramePos + 1]);
+                                frame.BottomRightX = int.Parse(splitedLine[indexOfStartFramePos + 2]);
+                                frame.BottomRightY = int.Parse(splitedLine[indexOfStartFramePos + 3]);
+                                currentFrames.Add(frame);
+                            }
+                            FramedImage currentImage = new FramedImage();
+                            currentImage.source = splitedLine[0];
+                            currentImage.frames = currentFrames;
+                            parcedImages.Add(currentImage);
                         }
-                        FramedImage currentImage = new FramedImage();
-                        currentImage.source = splitedLine[0];
-                        currentImage.frames = currentFrames;
-                        parcedImages.Add(currentImage);
                     }
                 }
                 

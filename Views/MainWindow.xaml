@@ -19,6 +19,7 @@
                 <MenuItem Header="Open images (*.jpg | *.png)" Click="MenuItem_Click" x:Name="OpenImage_Item" IsEnabled="{Binding OpenImagesEnabled}"/>
                 <MenuItem Header="Open marker files" Click="MenuItem_Click" x:Name="OpenMarker_Item"/>
                 <MenuItem Header="Switch marker type" Click="MenuItem_Click" x:Name="ChangeMarkerType_Item"/>
+                <MenuItem Header="Clear current files" Click="MenuItem_Click" x:Name="Clear_Item"/>
             </MenuItem>
         </Menu>
 

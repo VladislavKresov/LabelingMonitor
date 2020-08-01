@@ -243,7 +243,7 @@ namespace LabelingMonitor.ViewModels
                 string messageBoxText = e.Message;
                 string caption = "Couldn't open image";
                 MessageBoxButton button = MessageBoxButton.OK;
-                MessageBoxImage icon = MessageBoxImage.Warning;
+                MessageBoxImage icon = MessageBoxImage.Error;
                 System.Windows.MessageBox.Show(messageBoxText, caption, button, icon);
                 ResetViews();
             }
@@ -273,7 +273,7 @@ namespace LabelingMonitor.ViewModels
             }
         }
 
-        private void ResetViews()
+        public void ResetViews()
         {
             PathToCurrentImage = "";
             MainImageSource = null;
@@ -319,70 +319,86 @@ namespace LabelingMonitor.ViewModels
         /// </summary>
         public async void CreateImagesAsync()
         {
-            // Show the FolderBrowserDialog.
-            var folderBrowserDialog = new FolderBrowserDialog();           
-            DialogResult dialogResult = folderBrowserDialog.ShowDialog();
-            if (dialogResult == System.Windows.Forms.DialogResult.OK)
+            try
             {
-                await Task.Run(() =>
-                {                
-                string folder = folderBrowserDialog.SelectedPath;
-                // If framed type
-                if (MarkerType == UserData.MARKER_TYPE_FRAME)
+                // Show the FolderBrowserDialog.
+                var folderBrowserDialog = new FolderBrowserDialog();
+                DialogResult dialogResult = folderBrowserDialog.ShowDialog();
+                if (dialogResult == System.Windows.Forms.DialogResult.OK)
                 {
-                    // Asking for a new file
-                    string caption = "Create new marker file?";
-                    string messageBoxText = "Press 'Yes' if you want to create new marker file. Or 'No' if you want to add markers to current file.";
-                    MessageBoxButton button = MessageBoxButton.YesNoCancel;
-                    MessageBoxImage icon = MessageBoxImage.Question;
-                    MessageBoxResult messageBoxResult = System.Windows.MessageBox.Show(messageBoxText, caption, button, icon);
-
-                    // Setting file to write
-                    string pathToMarkerFile;                    
-                    if (messageBoxResult == MessageBoxResult.Yes)
+                    await Task.Run(() =>
                     {
-                        pathToMarkerFile = CreateNewPath(folder, UserData.PathToTxtFile);
-                    }
+                        string folder = folderBrowserDialog.SelectedPath;
+                    // If framed type
+                    if (MarkerType == UserData.MARKER_TYPE_FRAME)
+                        {
+                        // Asking for a new file
+                        string caption = "Create new marker file?";
+                            string messageBoxText = "Press 'Yes' if you want to create new marker file. Or 'No' if you want to add markers to current file.";
+                            MessageBoxButton button = MessageBoxButton.YesNoCancel;
+                            MessageBoxImage icon = MessageBoxImage.Question;
+                            MessageBoxResult messageBoxResult = System.Windows.MessageBox.Show(messageBoxText, caption, button, icon);
+
+                        // Setting file to write
+                        string pathToMarkerFile;
+                            if (messageBoxResult == MessageBoxResult.Yes)
+                            {
+                                pathToMarkerFile = CreateNewPath(folder, UserData.PathToTxtFile);
+                            }
+                            else
+                            {
+                                if (messageBoxResult == MessageBoxResult.No)
+                                    pathToMarkerFile = UserData.PathToTxtFile;
+                                else
+                                    return;
+                            }
+
+                            List<FramedImage> processedImages = new List<FramedImage>(UserData.FramedImages);
+                        // Processing frames
+                        processedImages = FileProcess.GetProcessedFramedImages(processedImages, Effects);
+
+                        // Creating new processed images
+                        for (int i = 0; i < processedImages.Count; i++)
+                            {
+                                FramedImage newImage = new FramedImage();
+                                newImage.source = CreateProcessedImage(folder, processedImages[i].source);
+                                newImage.frames = processedImages[i].frames;
+                                processedImages[i] = newImage;
+                            }
+
+                        // Parcing to writeble format
+                        var parcedLines = FileProcess.ParceFramedImages(processedImages);
+
+                        // Writing processed images
+                        using (StreamWriter sw = new StreamWriter(pathToMarkerFile, true))
+                            {
+                                sw.Write("\n");
+                                foreach (var line in parcedLines)
+                                    sw.WriteLine(line);
+                            }
+                        }
+                    // If masked type
                     else
-                    {
-                        pathToMarkerFile = UserData.PathToTxtFile;
-                    }
-
-                    var processedImages = UserData.FramedImages;                    
-                    // Processing frames
-                    processedImages = FileProcess.GetProcessedFramedImages(processedImages, Effects);
-
-                    // Creating new processed images
-                    for (int i = 0; i < processedImages.Count; i++)
-                    {
-                        FramedImage newImage = new FramedImage();
-                        newImage.source = CreateProcessedImage(folder, processedImages[i].source);
-                        newImage.frames = processedImages[i].frames;
-                        processedImages[i] = newImage;
-                    }
-
-                    // Parcing to writeble format
-                    var parcedLines = FileProcess.ParceFramedImages(processedImages);
-
-                    // Writing processed images
-                    using (StreamWriter sw = new StreamWriter(pathToMarkerFile, true))
-                    {
-                        foreach (var line in parcedLines)
-                            sw.WriteLine(line);
-                    }
+                        {
+                        // Creating new processed images               
+                        for (int i = 0; i < UserData.MaskedImages.Count; i++)
+                            {
+                                CreateProcessedImage(folder, UserData.MaskedImages[i].source);
+                                CreateProcessedMask(folder, UserData.MaskedImages[i]);
+                            }
+                        }
+                        GC.Collect();
+                    });
                 }
-                // If masked type
-                else
-                {
-                    // Creating new processed images               
-                    for (int i = 0; i < UserData.MaskedImages.Count; i++)
-                    {
-                        CreateProcessedImage(folder, UserData.MaskedImages[i].source);
-                        CreateProcessedMask(folder, UserData.MaskedImages[i]);                        
-                    }
-                }
-                GC.Collect();
-                });
+            }
+            catch (Exception e)
+            {
+                string messageBoxText = e.Message;
+                string caption = "Couldn't save the image";
+                MessageBoxButton button = MessageBoxButton.OK;
+                MessageBoxImage icon = MessageBoxImage.Error;
+                System.Windows.MessageBox.Show(messageBoxText, caption, button, icon);
+                ResetViews();
             }
         }
 

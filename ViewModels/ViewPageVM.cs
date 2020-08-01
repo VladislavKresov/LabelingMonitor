@@ -289,7 +289,7 @@ namespace LabelingMonitor.ViewModels
                 NextBTN_Enabled = true;
         }
 
-        private void ResetViews()
+        public void ResetViews()
         {
             PathToCurrentImage = "";
             MainImageSource = null;

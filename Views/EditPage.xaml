@@ -44,7 +44,10 @@
                 <ComboBoxItem IsSelected="True">No effects</ComboBoxItem>
                 <ComboBoxItem>Lightening</ComboBoxItem>
                 <ComboBoxItem>Shadowing</ComboBoxItem>
-                <ComboBoxItem>Crop</ComboBoxItem>
+                <StackPanel Orientation="Horizontal">
+                <ComboBoxItem>Crop from sides:</ComboBoxItem>
+                    <TextBox Width="30" PreviewTextInput="TextBox_PreviewTextInput" Text="{Binding CroppingIndent, Mode=TwoWay}"/>
+                </StackPanel>
                 <ComboBoxItem>Rotate 90</ComboBoxItem>
                 <ComboBoxItem>Pixelize</ComboBoxItem>
             </ComboBox>

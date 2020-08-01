@@ -73,7 +73,10 @@ namespace LabelingMonitor.Models
                         processedImage = ImageProcess.Shadowing(processedImage, 5);
                         break;
                     case EditPageVM.EFFECT_CROP:
-                        processedImage = ImageProcess.Crop(processedImage, 50, 50, (float) sourceImage.Width - 50, (float) sourceImage.Height - 50);
+                        int indent = EditPageVM.IndentToCrop;                        
+                        int width = (int) sourceImage.Width - 2 * indent;
+                        int height = (int) sourceImage.Height - 2 * indent;
+                        processedImage = ImageProcess.Crop(processedImage, indent, indent, width, height);
                         break;
                     case EditPageVM.EFFECT_ROTATE:
                         processedImage = ImageProcess.Rotate(processedImage, -90f);
@@ -100,6 +103,15 @@ namespace LabelingMonitor.Models
             {
                 encoder.Save(fileStream);
             }
+        }
+
+        private static int clamp(int value, int minVal, int maxVal)
+        {
+            if (value < minVal)
+                return minVal;
+            if (value > maxVal)
+                return maxVal;
+            return value;
         }
 
     }

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Media.Imaging;
@@ -92,6 +93,13 @@ namespace LabelingMonitor.ViewModels
         {
             get { return _Updated; }
             set { SetProperty(ref _Updated, value); }
+        }        
+        // Binding the cropping indent
+        private int _CroppingIndent;
+        public int CroppingIndent
+        {
+            get { return _CroppingIndent; }
+            set { SetProperty(ref _CroppingIndent, value); }
         }
 
         public const int EFFECT_CLEAR = 0;
@@ -103,6 +111,7 @@ namespace LabelingMonitor.ViewModels
 
         private int CurrentFrameImage;
         private int CurrentMaskImage;
+        //returns image number depending on marker type
         private int CurrentImageNumber
         {
             get
@@ -123,6 +132,7 @@ namespace LabelingMonitor.ViewModels
         private List<int> Effects;
 
         private static EditPageVM instance;
+        public static int IndentToCrop;
 
         private EditPageVM()
         {
@@ -131,11 +141,36 @@ namespace LabelingMonitor.ViewModels
             PropertyChanged += EditPage_PropertyChanged;
         }
 
+        private void EditPage_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(MarkerType))
+            {
+                // on marker type changing 
+                ResetViews();
+                UpdateImages();
+            }
+            if (e.PropertyName == nameof(Updated))
+            {
+                // on data update
+                if (!Updated)
+                {
+                    UpdateImages();
+                    Updated = true;
+                }
+            }
+            if (e.PropertyName == nameof(CroppingIndent))
+            {
+                IndentToCrop = _CroppingIndent;
+            }
+        }
+
         private void InitializeVariables()
         {
             CurrentFrameImage = 1;
             CurrentMaskImage = 1;
             Updated = true;
+            CroppingIndent = 0;
+            IndentToCrop = 0;
             Effects = new List<int>();
         }
 
@@ -154,7 +189,8 @@ namespace LabelingMonitor.ViewModels
             if (effect == EFFECT_CLEAR)
                 ClearEffects();
             else
-                Effects.Add(effect);
+                if(effect != EFFECT_CROP || !Effects.Contains(EFFECT_CROP))
+                    Effects.Add(effect);
 
             Updated = false;
         }
@@ -171,37 +207,28 @@ namespace LabelingMonitor.ViewModels
             Updated = false;
         }
 
-        private void EditPage_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == nameof(MarkerType))
-            {
-                // on marker type changing                
-                UpdateImages();
-            }
-            if (e.PropertyName == nameof(Updated))
-            {
-                // on data update
-                if (!Updated)
-                {
-                    UpdateImages();
-                    Updated = true;
-                }
-            }
-        }
-
         private void UpdateImages()
         {
             try
             {
                 ValidateViewsEnablity();
                 // updating data if have parced images
-                if (UserData.GetCountOfParcedImages(MarkerType) > 0)
+                if (GetCountOfParcedImages(MarkerType) > 0)
                 {
                     // Getting source image
-                    string pathToSource = UserData.GetPathToImage(CurrentImageNumber - 1, MarkerType);
+                    string pathToSource = GetPathToImage(CurrentImageNumber - 1, MarkerType);
                     BitmapImage sourceImage = new BitmapImage(new Uri(pathToSource));
 
-                    BitmapImage processedImage = ImageCollection.GetProcessed(sourceImage, Effects);
+                    // Drawing markers
+                    BitmapImage markedImage;
+                    if(MarkerType == MARKER_TYPE_FRAME)
+                        markedImage = ImageCollection.GetFramed(CurrentImageNumber - 1);
+                    else
+                    {
+                        markedImage = ImageCollection.GetMasks(CurrentImageNumber - 1, UserData.CroppingType)[0];
+                    }
+                    // Processing effcts
+                    BitmapImage processedImage = ImageCollection.GetProcessed(markedImage, Effects);
 
                     PathToCurrentImage = pathToSource;
                     MainImageSource = sourceImage;
@@ -287,13 +314,18 @@ namespace LabelingMonitor.ViewModels
                 CreateImagesBTN_Enabled = false;
         }
 
-        public void CreateImages()
+        /// <summary>
+        /// Creates new processed marker files and images
+        /// </summary>
+        public async void CreateImagesAsync()
         {
             // Show the FolderBrowserDialog.
             var folderBrowserDialog = new FolderBrowserDialog();           
             DialogResult dialogResult = folderBrowserDialog.ShowDialog();
             if (dialogResult == System.Windows.Forms.DialogResult.OK)
             {
+                await Task.Run(() =>
+                {                
                 string folder = folderBrowserDialog.SelectedPath;
                 // If framed type
                 if (MarkerType == UserData.MARKER_TYPE_FRAME)
@@ -304,6 +336,7 @@ namespace LabelingMonitor.ViewModels
                     MessageBoxButton button = MessageBoxButton.YesNoCancel;
                     MessageBoxImage icon = MessageBoxImage.Question;
                     MessageBoxResult messageBoxResult = System.Windows.MessageBox.Show(messageBoxText, caption, button, icon);
+
                     // Setting file to write
                     string pathToMarkerFile;                    
                     if (messageBoxResult == MessageBoxResult.Yes)
@@ -314,8 +347,12 @@ namespace LabelingMonitor.ViewModels
                     {
                         pathToMarkerFile = UserData.PathToTxtFile;
                     }
+
+                    var processedImages = UserData.FramedImages;                    
+                    // Processing frames
+                    processedImages = FileProcess.GetProcessedFramedImages(processedImages, Effects);
+
                     // Creating new processed images
-                    var processedImages = UserData.FramedImages;
                     for (int i = 0; i < processedImages.Count; i++)
                     {
                         FramedImage newImage = new FramedImage();
@@ -323,10 +360,10 @@ namespace LabelingMonitor.ViewModels
                         newImage.frames = processedImages[i].frames;
                         processedImages[i] = newImage;
                     }
-                    // Processing frames
-                    processedImages = FileProcess.GetProcessedFramedImages(processedImages, Effects);
+
                     // Parcing to writeble format
                     var parcedLines = FileProcess.ParceFramedImages(processedImages);
+
                     // Writing processed images
                     using (StreamWriter sw = new StreamWriter(pathToMarkerFile, true))
                     {
@@ -345,9 +382,10 @@ namespace LabelingMonitor.ViewModels
                     }
                 }
                 GC.Collect();
+                });
             }
-
         }
+
         /// <summary>
         /// Creates the image and returned new path
         /// </summary>        
@@ -362,6 +400,9 @@ namespace LabelingMonitor.ViewModels
             return newImagePath;
         }
 
+        /// <summary>
+        /// Creates processed marker file
+        /// </summary>
         private void CreateProcessedMask(string folder, MaskedImage maskedImage)
         {
             try
@@ -410,5 +451,6 @@ namespace LabelingMonitor.ViewModels
             }
             return newImagePath;
         }
+        
     }
 }

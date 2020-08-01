@@ -15,37 +15,80 @@ namespace LabelingMonitor.Models.File_Processing
     {
         public static List<FramedImage> GetProcessedFramedImages(List<FramedImage> sourceImages, List<int> effects)
         {
-            if (!effects.Contains(EditPageVM.EFFECT_CROP) && !effects.Contains(EditPageVM.EFFECT_ROTATE))
+            bool needCrop = effects.Contains(EditPageVM.EFFECT_CROP);
+            bool needRotate = effects.Contains(EditPageVM.EFFECT_ROTATE);
+            if (!needCrop && !needRotate)
                 return sourceImages;
 
             List<FramedImage> processedImages = sourceImages;
             int rotationCount = effects.FindAll(element => element.Equals(EditPageVM.EFFECT_ROTATE)).Count;
+            int indent = EditPageVM.IndentToCrop;
+            // Processing frames
             for (int i = 0; i < processedImages.Count; i++)
             {
                 FramedImage currentImage = processedImages[i];
-                int height = new BitmapImage(new Uri(currentImage.source)).PixelHeight;
-                currentImage.frames = RotateFrames90(processedImages[i].frames, height);
+                var source = new BitmapImage(new Uri(currentImage.source));
+                int width = source.PixelWidth;
+                int height = source.PixelHeight;
+                // Cropping frames
+                if (needCrop)
+                {
+                    currentImage.frames = CropFrames(width, height, indent, currentImage.frames);
+                    width -= 2 * indent; 
+                    height -= 2 * indent; 
+                }
+                // Rotating frames
+                for (int rotation = 0; rotation < rotationCount; rotation++)
+                {
+                    currentImage.frames = RotateFrames90(currentImage.frames, width);
+                    int temp = width;
+                    width = height;
+                    height = temp;
+                }
+
                 processedImages[i] = currentImage;
             }
             return processedImages;
         }
 
-        private static List<Frame> RotateFrames90(List<Frame> frames, int height)
+        private static List<Frame> CropFrames(int width, int height, int indent, List<Frame> frames)
         {
-            for (int i = 0; i < frames.Count; i++)
+            List<Frame> CroppedFrames = new List<Frame>();            
+            foreach (var frame in frames)
             {
-                // Rotating each frame
-                Frame RotatedFrame = new Frame();
-                RotatedFrame.TopLeftX = frames[i].TopLeftY;
-                RotatedFrame.TopLeftY = height - frames[i].BottomRightX;
-                RotatedFrame.BottomRightX = frames[i].BottomRightY;
-                RotatedFrame.BottomRightY = height - frames[i].TopLeftX;
-                frames[i] = RotatedFrame;
+                Frame croppedFrame = new Frame();
+                // cropping frames
+                croppedFrame.TopLeftX = clamp(frame.TopLeftX - indent, 0, width - 2*indent);
+                croppedFrame.TopLeftY = clamp(frame.TopLeftY - indent, 0, height - 2*indent);
+                croppedFrame.BottomRightX = clamp(frame.BottomRightX - indent, 0, width - 2*indent);
+                croppedFrame.BottomRightY = clamp(frame.BottomRightY - indent, 0, height - 2*indent);
+                // Validating frame
+                if (croppedFrame.TopLeftX < (width - 2 * indent) && croppedFrame.BottomRightX > 0 
+                    && croppedFrame.TopLeftY < (height - 2 * indent) && croppedFrame.BottomRightY > 0)
+                    CroppedFrames.Add(croppedFrame);
             }
-            return frames;
+            return CroppedFrames;
         }
 
-        public static List<string> ParceFramedImages(List<UserData.FramedImage> sourceImages)
+        private static List<Frame> RotateFrames90(List<Frame> frames, int width)
+        {
+            List<Frame> rotatedFrames = new List<Frame>();
+            foreach (var frame in frames)
+            {
+                // Rotating each frame
+                int frameWidth = frame.BottomRightX - frame.TopLeftX;
+                int frameHeight = frame.BottomRightY - frame.TopLeftY;
+                Frame RotatedFrame = new Frame();
+                RotatedFrame.TopLeftX = frame.TopLeftY;
+                RotatedFrame.TopLeftY = width - frame.BottomRightX;
+                RotatedFrame.BottomRightX = frame.BottomRightY;
+                RotatedFrame.BottomRightY = width - frame.TopLeftX;
+                rotatedFrames.Add(RotatedFrame);
+            }
+            return rotatedFrames;
+        }
+
+        public static List<string> ParceFramedImages(List<FramedImage> sourceImages)
         {
             List<string> parcedList = new List<string>();
             foreach (var image in sourceImages)
@@ -61,10 +104,20 @@ namespace LabelingMonitor.Models.File_Processing
         public static char[,] GetProcessedMask(MaskedImage maskedImage, List<int> effects)
         {
             BitmapImage bm = new BitmapImage(new Uri(maskedImage.source));
+
+            int indent = EditPageVM.IndentToCrop;
             char[,] mask = ReadMaskFromCSV(maskedImage.csvMask, bm.PixelWidth, bm.PixelHeight);
             if (!effects.Contains(EditPageVM.EFFECT_CROP) && !effects.Contains(EditPageVM.EFFECT_ROTATE))
                 return mask;
-            
+
+            // Cropping mask
+            if (effects.Contains(EditPageVM.EFFECT_CROP))
+            {
+                int width = bm.PixelWidth - indent;
+                int height = bm.PixelHeight - indent;
+                mask = CropMask(width, height, indent, mask);
+            }
+            // Rotating mask
             int rotationCount = effects.FindAll(element => element.Equals(EditPageVM.EFFECT_ROTATE)).Count;
             for (int i = 0; i < rotationCount; i++)
                 mask = RotateMask90(mask);
@@ -72,13 +125,26 @@ namespace LabelingMonitor.Models.File_Processing
             return mask;
         }
 
+        private static char[,] CropMask(int width, int height, int indent, char[,] mask)
+        {      
+            char[,] CropedMask = new char[width, height];
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    CropedMask[x, y] = mask[x + indent, y + indent];
+                }
+            }
+            return CropedMask;
+        }
+
         private static char[,] RotateMask90(char[,] m)
         {
             var result = new char[m.GetLength(1), m.GetLength(0)];
 
-            for (int i = 0; i < m.GetLength(1); i++)
-                for (int j = 0; j < m.GetLength(0); j++)
-                    result[i, j] = m[m.GetLength(0) - j - 1, i];
+            for (int y = 0; y < m.GetLength(1); y++)
+                for (int x = 0; x < m.GetLength(0); x++)
+                    result[y, x] = m[m.GetLength(0) - x - 1, y];
 
             return result;
         }
@@ -99,5 +165,14 @@ namespace LabelingMonitor.Models.File_Processing
             }
             return mask;
         }
+
+    private static int clamp(int value, int minVal, int maxVal)
+    {
+        if (value < minVal)
+            return minVal;
+        if (value > maxVal)
+            return maxVal;
+        return value;
+    }
     }
 }

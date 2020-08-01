@@ -70,7 +70,7 @@ namespace LabelingMonitor.Models.Image_Processing
             return newImg;
         }
 
-        public static byte[] Crop(byte[] image, float left, float top, float right, float bottom)
+        public static byte[] Crop(byte[] image, float left, float top, float width, float height)
         {
 
             byte[] photoBytes = image;
@@ -83,7 +83,7 @@ namespace LabelingMonitor.Models.Image_Processing
                     using (ImageFactory imageFactory = new ImageFactory(preserveExifData: true))
                     {
                         imageFactory.Load(inStream)
-                                    .Crop(new CropLayer(left, top, right, bottom, CropMode.Pixels))
+                                    .Crop(new CropLayer(left, top, width, height, CropMode.Pixels))
                                     .Format(format)
                                     .Save(outStream);
                     }

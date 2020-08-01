@@ -4,6 +4,7 @@ using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
 
@@ -161,8 +162,8 @@ namespace LabelingMonitor.ViewModels
         /// </summary>
         private void UpdateImages()
         {
-            //try
-            //{
+            try
+            {                
                 Updated = true;
                 // Validating views
                 ValidateViewsEnablity();
@@ -201,17 +202,17 @@ namespace LabelingMonitor.ViewModels
 
                     // Disposing the memory
                     GC.Collect();
-                }
-            //}
-            //catch (Exception e)
-            //{
-            //    string messageBoxText = e.Message;
-            //    string caption = "Couldn't open image";
-            //    MessageBoxButton button = MessageBoxButton.OK;
-            //    MessageBoxImage icon = MessageBoxImage.Warning;
-            //    MessageBox.Show(messageBoxText, caption, button, icon);
-            //    ResetViews();
-            //}
+                }                
+            }
+            catch (Exception e)
+            {
+                string messageBoxText = e.Message;
+                string caption = "Couldn't open image";
+                MessageBoxButton button = MessageBoxButton.OK;
+                MessageBoxImage icon = MessageBoxImage.Warning;
+                MessageBox.Show(messageBoxText, caption, button, icon);
+                ResetViews();
+            }
         }
 
         ///////////////// service methods //////////////////////      

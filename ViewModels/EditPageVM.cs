@@ -59,6 +59,13 @@ namespace LabelingMonitor.ViewModels
             get { return _NextBTN_Enabled; }
             set { SetProperty(ref _NextBTN_Enabled, value); }
         }
+        // Binding the enable state for "Apply" button
+        private bool _ApplyBTN_Enabled;
+        public bool ApplyBTN_Enabled
+        {
+            get { return _ApplyBTN_Enabled; }
+            set { SetProperty(ref _ApplyBTN_Enabled, value); }
+        }
         // Binding the enable state for ComboBox
         private bool _CmbEnabled;
         public bool CmbEnabled
@@ -80,6 +87,13 @@ namespace LabelingMonitor.ViewModels
             get { return _CreateImagesBTN_Enabled; }
             set { SetProperty(ref _CreateImagesBTN_Enabled, value); }
         }
+        // Binding the content for "Create images" button
+        private string _CreateImagesBTN_Content;
+        public string CreateImagesBTN_Content
+        {
+            get { return _CreateImagesBTN_Content; }
+            set { SetProperty(ref _CreateImagesBTN_Content, value); }
+        }
         // Binding the marker Type state
         private int _MarkerType;
         public int MarkerType
@@ -93,7 +107,7 @@ namespace LabelingMonitor.ViewModels
         {
             get { return _Updated; }
             set { SetProperty(ref _Updated, value); }
-        }        
+        }
         // Binding the cropping indent
         private int _CroppingIndent;
         public int CroppingIndent
@@ -111,7 +125,9 @@ namespace LabelingMonitor.ViewModels
 
         private int CurrentFrameImage;
         private int CurrentMaskImage;
-        //returns image number depending on marker type
+        /// <summary>
+        /// returns image number depending on marker type
+        /// </summary>
         private int CurrentImageNumber
         {
             get
@@ -140,7 +156,19 @@ namespace LabelingMonitor.ViewModels
             ValidateViewsEnablity();
             PropertyChanged += EditPage_PropertyChanged;
         }
+        public static EditPageVM GetInstance()
+        {
+            if (instance == null)
+            {
+                instance = new EditPageVM();
+                return instance;
+            }
+            return instance;
+        }
 
+        /// <summary>
+        /// On binding properties changes
+        /// </summary>
         private void EditPage_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(MarkerType))
@@ -163,7 +191,7 @@ namespace LabelingMonitor.ViewModels
                 IndentToCrop = _CroppingIndent;
             }
         }
-
+        
         private void InitializeVariables()
         {
             CurrentFrameImage = 1;
@@ -174,23 +202,13 @@ namespace LabelingMonitor.ViewModels
             Effects = new List<int>();
         }
 
-        public static EditPageVM GetInstance()
-        {
-            if (instance == null)
-            {
-                instance = new EditPageVM();
-                return instance;
-            }
-            return instance;
-        }
-
         public void AddEffect(int effect)
         {
             if (effect == EFFECT_CLEAR)
                 ClearEffects();
             else
-                if(effect != EFFECT_CROP || !Effects.Contains(EFFECT_CROP))
-                    Effects.Add(effect);
+                if (effect != EFFECT_CROP || !Effects.Contains(EFFECT_CROP))
+                Effects.Add(effect);
 
             Updated = false;
         }
@@ -221,7 +239,7 @@ namespace LabelingMonitor.ViewModels
 
                     // Drawing markers
                     BitmapImage markedImage;
-                    if(MarkerType == MARKER_TYPE_FRAME)
+                    if (MarkerType == MARKER_TYPE_FRAME)
                         markedImage = ImageCollection.GetFramed(CurrentImageNumber - 1);
                     else
                     {
@@ -278,19 +296,20 @@ namespace LabelingMonitor.ViewModels
             PathToCurrentImage = "";
             MainImageSource = null;
             EditedImageSource = null;
+            ValidateViewsEnablity();
         }
 
         private void ValidateViewsEnablity()
         {
             if (MarkerType == UserData.MARKER_TYPE_FRAME)
-            {
-                CmbEnabled = false;
+            {                
                 MarkerTypeText = "Marker type: framed";
+                CreateImagesBTN_Content = "Create framed images";
             }
             else
-            {
-                CmbEnabled = true;
+            {                
                 MarkerTypeText = "Marker type: masked";
+                CreateImagesBTN_Content = "Create masked images";
             }
 
             if (CurrentImageNumber == 1)
@@ -312,6 +331,19 @@ namespace LabelingMonitor.ViewModels
                 CreateImagesBTN_Enabled = true;
             else
                 CreateImagesBTN_Enabled = false;
+
+            CmbEnabled = true;
+            ApplyBTN_Enabled = true;
+        }
+
+        private void DisableViews()
+        {
+            CmbEnabled = false;
+            CreateImagesBTN_Enabled = false;
+            PrevBTN_Enabled = false;
+            NextBTN_Enabled = false;
+            UndoBTN_Enabled = false;
+            ApplyBTN_Enabled = false;
         }
 
         /// <summary>
@@ -329,18 +361,18 @@ namespace LabelingMonitor.ViewModels
                     await Task.Run(() =>
                     {
                         string folder = folderBrowserDialog.SelectedPath;
-                    // If framed type
-                    if (MarkerType == UserData.MARKER_TYPE_FRAME)
+                        // If framed type
+                        if (MarkerType == UserData.MARKER_TYPE_FRAME)
                         {
-                        // Asking for a new file
-                        string caption = "Create new marker file?";
+                            // Asking for a new file
+                            string caption = "Create new marker file?";
                             string messageBoxText = "Press 'Yes' if you want to create new marker file. Or 'No' if you want to add markers to current file.";
                             MessageBoxButton button = MessageBoxButton.YesNoCancel;
                             MessageBoxImage icon = MessageBoxImage.Question;
                             MessageBoxResult messageBoxResult = System.Windows.MessageBox.Show(messageBoxText, caption, button, icon);
 
-                        // Setting file to write
-                        string pathToMarkerFile;
+                            // Setting file to write
+                            string pathToMarkerFile;
                             if (messageBoxResult == MessageBoxResult.Yes)
                             {
                                 pathToMarkerFile = CreateNewPath(folder, UserData.PathToTxtFile);
@@ -353,36 +385,41 @@ namespace LabelingMonitor.ViewModels
                                     return;
                             }
 
+                            DisableViews();
                             List<FramedImage> processedImages = new List<FramedImage>(UserData.FramedImages);
-                        // Processing frames
-                        processedImages = FileProcess.GetProcessedFramedImages(processedImages, Effects);
+                            // Processing frames
+                            processedImages = FileProcess.GetProcessedFramedImages(processedImages, Effects);
 
-                        // Creating new processed images
-                        for (int i = 0; i < processedImages.Count; i++)
+                            // Creating new processed images
+                            for (int i = 0; i < processedImages.Count; i++)
                             {
+                                CreateImagesBTN_Content = "Saving: " + (i + 1) + "/" + processedImages.Count;
                                 FramedImage newImage = new FramedImage();
                                 newImage.source = CreateProcessedImage(folder, processedImages[i].source);
                                 newImage.frames = processedImages[i].frames;
                                 processedImages[i] = newImage;
                             }
 
-                        // Parcing to writeble format
-                        var parcedLines = FileProcess.ParceFramedImages(processedImages);
+                            // Parcing to writeble format
+                            var parcedLines = FileProcess.ParceFramedImages(processedImages);
 
-                        // Writing processed images
-                        using (StreamWriter sw = new StreamWriter(pathToMarkerFile, true))
+                            // Writing processed images
+                            using (StreamWriter sw = new StreamWriter(pathToMarkerFile, true))
                             {
                                 sw.Write("\n");
                                 foreach (var line in parcedLines)
                                     sw.WriteLine(line);
                             }
                         }
-                    // If masked type
-                    else
+                        // If masked type
+                        else
                         {
-                        // Creating new processed images               
-                        for (int i = 0; i < UserData.MaskedImages.Count; i++)
+                            DisableViews();
+                            // Creating new processed images    
+                            int countOfParcedImages = UserData.MaskedImages.Count;
+                            for (int i = 0; i < countOfParcedImages; i++)
                             {
+                                CreateImagesBTN_Content = "Saving: " + (i + 1) + "/" + countOfParcedImages;
                                 CreateProcessedImage(folder, UserData.MaskedImages[i].source);
                                 CreateProcessedMask(folder, UserData.MaskedImages[i]);
                             }
@@ -390,6 +427,7 @@ namespace LabelingMonitor.ViewModels
                         GC.Collect();
                     });
                 }
+                ValidateViewsEnablity();
             }
             catch (Exception e)
             {
@@ -398,7 +436,7 @@ namespace LabelingMonitor.ViewModels
                 MessageBoxButton button = MessageBoxButton.OK;
                 MessageBoxImage icon = MessageBoxImage.Error;
                 System.Windows.MessageBox.Show(messageBoxText, caption, button, icon);
-                ResetViews();
+                ValidateViewsEnablity();
             }
         }
 
@@ -424,7 +462,7 @@ namespace LabelingMonitor.ViewModels
             try
             {
                 StringBuilder csvContent = new StringBuilder();
-                string newFilePath = CreateNewPath(folder,maskedImage.csvMask);
+                string newFilePath = CreateNewPath(folder, maskedImage.csvMask);
                 // Getting processed mask
                 char[,] processedMask = FileProcess.GetProcessedMask(maskedImage, Effects);
                 // Writing to new File                
@@ -435,11 +473,11 @@ namespace LabelingMonitor.ViewModels
                     string line = "";
                     for (int x = 0; x < width; x++)
                     {
-                        line+=processedMask[x,y]+";";
+                        line += processedMask[x, y] + ";";
                     }
                     csvContent.AppendLine(line);
                 }
-                
+
                 File.AppendAllText(newFilePath, csvContent.ToString());
             }
             catch (Exception e)
@@ -467,6 +505,6 @@ namespace LabelingMonitor.ViewModels
             }
             return newImagePath;
         }
-        
+
     }
 }
